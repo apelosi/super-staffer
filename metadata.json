@@ -1,0 +1,7 @@
+{
+  "name": "SuperStaffer",
+  "description": "Create your own superhero trading card with a selfie! A fun team-building app for Vibez Ventures.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
