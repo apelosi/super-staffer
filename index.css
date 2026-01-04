@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+@theme {
+  --font-comic: "Bangers", cursive;
+  --font-action: "Russo One", sans-serif;
+  --font-body: "Roboto", sans-serif;
+
+  --color-vibez-blue: #00B4D8;
+  --color-vibez-purple: #7209B7;
+  --color-card-bg: #1a1a2e;
+}
+
+body {
+  background-color: #0f172a;
+  color: white;
+  font-family: var(--font-body);
+  overflow-x: hidden;
+}
+
+/* Hide scrollbar for clean UI in cards */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

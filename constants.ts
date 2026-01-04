@@ -1,18 +1,18 @@
 import { ThemeDef } from './types';
 
 export const THEMES: ThemeDef[] = [
-  { id: 'cyberpunk', name: 'Cyberpunk Neon', description: 'High-tech low-life in a neon city.', icon: '⚡', color: 'from-pink-500 to-purple-500' },
-  { id: 'mystic', name: 'Ancient Mystic', description: 'Sorcery and ancient ruins.', icon: '✨', color: 'from-indigo-500 to-purple-600' },
-  { id: 'space', name: 'Space Opera', description: 'Intergalactic battles and starships.', icon: '🚀', color: 'from-blue-600 to-cyan-400' },
-  { id: 'steampunk', name: 'Steampunk Gear', description: 'Steam-powered brass machinery.', icon: '⚙️', color: 'from-amber-700 to-orange-500' },
-  { id: 'ninja', name: 'Ninja Shadow', description: 'Stealth and martial arts in the shadows.', icon: '🗡️', color: 'from-gray-800 to-red-600' },
-  { id: 'elemental', name: 'Elemental Nature', description: 'Wielding the forces of nature.', icon: '🍃', color: 'from-green-500 to-emerald-700' },
-  { id: 'noir', name: 'Noir Detective', description: 'Gritty mysteries in black and white.', icon: '🔍', color: 'from-gray-600 to-gray-900' },
-  { id: 'galactic', name: 'Galactic Guardian', description: 'Defending the galaxy from tyrants.', icon: '🛡️', color: 'from-blue-500 to-indigo-700' },
-  { id: 'medieval', name: 'Medieval Knight', description: 'Swords, shields, and dragons.', icon: '🏰', color: 'from-red-700 to-amber-600' },
-  { id: 'urban', name: 'Urban Vigilante', description: 'Protecting the streets at night.', icon: '🏢', color: 'from-slate-700 to-slate-900' },
-  { id: 'mutant', name: 'Mutant X', description: 'Genetic mutations and super powers.', icon: '🧬', color: 'from-lime-500 to-green-600' },
-  { id: 'mecha', name: 'Tech Mecha', description: 'Piloting giant robot suits.', icon: '🦾', color: 'from-cyan-600 to-blue-800' },
+  { id: 'cyberpunk', name: 'Cyberpunk Neon', description: 'High-tech low-life in a neon city.', icon: 'Zap', color: 'from-pink-500 to-purple-500' },
+  { id: 'mystic', name: 'Ancient Mystic', description: 'Sorcery and ancient ruins.', icon: 'Sparkles', color: 'from-indigo-500 to-purple-600' },
+  { id: 'space', name: 'Space Opera', description: 'Intergalactic battles and starships.', icon: 'Rocket', color: 'from-blue-600 to-cyan-400' },
+  { id: 'steampunk', name: 'Steampunk Gear', description: 'Steam-powered brass machinery.', icon: 'Settings', color: 'from-amber-700 to-orange-500' },
+  { id: 'ninja', name: 'Ninja Shadow', description: 'Stealth and martial arts in the shadows.', icon: 'Sword', color: 'from-gray-800 to-red-600' },
+  { id: 'elemental', name: 'Elemental Nature', description: 'Wielding the forces of nature.', icon: 'Leaf', color: 'from-green-500 to-emerald-700' },
+  { id: 'noir', name: 'Noir Detective', description: 'Gritty mysteries in black and white.', icon: 'Search', color: 'from-gray-600 to-gray-900' },
+  { id: 'galactic', name: 'Galactic Guardian', description: 'Defending the galaxy from tyrants.', icon: 'Shield', color: 'from-blue-500 to-indigo-700' },
+  { id: 'medieval', name: 'Medieval Knight', description: 'Swords, shields, and dragons.', icon: 'Castle', color: 'from-red-700 to-amber-600' },
+  { id: 'urban', name: 'Urban Vigilante', description: 'Protecting the streets at night.', icon: 'Building', color: 'from-slate-700 to-slate-900' },
+  { id: 'mutant', name: 'Mutant X', description: 'Genetic mutations and super powers.', icon: 'Dna', color: 'from-lime-500 to-green-600' },
+  { id: 'mecha', name: 'Tech Mecha', description: 'Piloting giant robot suits.', icon: 'Cpu', color: 'from-cyan-600 to-blue-800' },
 ];
 
 export const VIBEZ_LOGO_SVG = `

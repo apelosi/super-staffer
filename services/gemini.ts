@@ -9,11 +9,12 @@ export const generateCardImage = async (
   theme: ThemeName,
   alignment: Alignment
 ): Promise<string> => {
-  if (!process.env.API_KEY) {
-    throw new Error("API Key is missing.");
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error("API Key is missing. Please check your .env file.");
   }
 
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey });
 
   // Clean the base64 string if it includes the header
   const cleanBase64 = selfieBase64.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, '');
@@ -64,7 +65,7 @@ export const generateCardImage = async (
     // The new SDK structure puts the image in parts
     let base64Image = '';
     const parts = response.candidates?.[0]?.content?.parts;
-    
+
     if (parts) {
       for (const part of parts) {
         if (part.inlineData && part.inlineData.data) {
@@ -75,8 +76,8 @@ export const generateCardImage = async (
     }
 
     if (!base64Image) {
-        console.error("No image found in response", response);
-        throw new Error("Failed to generate image: No image data returned.");
+      console.error("No image found in response", response);
+      throw new Error("Failed to generate image: No image data returned.");
     }
 
     return `data:image/png;base64,${base64Image}`;

@@ -2,8 +2,31 @@ import React, { useState } from 'react';
 import { User, Alignment, ThemeName } from '../types';
 import { THEMES } from '../constants';
 import { generateCardImage } from '../services/gemini';
-import { ArrowLeft, Sparkles, AlertTriangle } from 'lucide-react';
+import {
+  ArrowLeft,
+  Sparkles,
+  AlertTriangle,
+  Zap,
+  Rocket,
+  Settings,
+  Sword,
+  Leaf,
+  Search,
+  Shield,
+  Castle,
+  Building,
+  Dna,
+  Cpu
+} from 'lucide-react';
 import { motion } from 'framer-motion';
+
+const ThemeIcon = ({ name, className }: { name: string, className?: string }) => {
+  const icons: Record<string, any> = {
+    Zap, Sparkles, Rocket, Settings, Sword, Leaf, Search, Shield, Castle, Building, Dna, Cpu
+  };
+  const IconComponent = icons[name] || Sparkles;
+  return <IconComponent className={className} />;
+};
 
 interface CardCreatorProps {
   user: User;
@@ -44,7 +67,7 @@ const CardCreator: React.FC<CardCreatorProps> = ({ user, onCancel, onSuccess }) 
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
-          <button 
+          <button
             onClick={onCancel}
             className="p-2 bg-slate-800 rounded-full hover:bg-slate-700 transition"
           >
@@ -61,10 +84,10 @@ const CardCreator: React.FC<CardCreatorProps> = ({ user, onCancel, onSuccess }) 
         )}
 
         <div className="grid lg:grid-cols-3 gap-8">
-          
+
           {/* Left: Controls */}
           <div className="lg:col-span-2 space-y-8">
-            
+
             {/* Alignment Selection */}
             <div className="space-y-4">
               <label className="text-slate-400 font-bold uppercase tracking-wider text-sm">Select Alignment</label>
@@ -73,11 +96,10 @@ const CardCreator: React.FC<CardCreatorProps> = ({ user, onCancel, onSuccess }) 
                   <button
                     key={align}
                     onClick={() => setAlignment(align)}
-                    className={`p-4 rounded-xl border-2 font-action text-xl transition-all ${
-                      alignment === align 
+                    className={`p-4 rounded-xl border-2 font-action text-xl transition-all ${alignment === align
                         ? align === 'Hero' ? 'border-blue-500 bg-blue-500/20 text-blue-300 shadow-[0_0_20px_rgba(59,130,246,0.3)]' : 'border-red-500 bg-red-500/20 text-red-300 shadow-[0_0_20px_rgba(239,68,68,0.3)]'
                         : 'border-slate-700 bg-slate-800 text-slate-500 hover:border-slate-600'
-                    }`}
+                      }`}
                   >
                     {align.toUpperCase()}
                   </button>
@@ -97,17 +119,21 @@ const CardCreator: React.FC<CardCreatorProps> = ({ user, onCancel, onSuccess }) 
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => setSelectedThemeId(theme.id)}
-                      className={`relative flex flex-col items-center p-3 rounded-xl border-2 transition-all overflow-hidden ${
-                        isSelected 
-                          ? 'border-vibez-purple bg-gradient-to-br from-slate-800 to-slate-900 shadow-lg ring-2 ring-vibez-purple/50' 
+                      className={`relative flex flex-col items-center p-3 rounded-xl border-2 transition-all overflow-hidden ${isSelected
+                          ? 'border-vibez-purple bg-gradient-to-br from-slate-800 to-slate-900 shadow-lg ring-2 ring-vibez-purple/50'
                           : 'border-slate-700 bg-slate-800 hover:border-slate-600'
-                      }`}
+                        }`}
                     >
-                      <div className={`text-4xl mb-2 ${isSelected ? 'scale-110 transition-transform' : ''}`}>
-                        {theme.icon}
+                      <div className={`mb-2 ${isSelected ? 'scale-110 transition-transform text-vibez-blue' : 'text-slate-400'}`}>
+                        <ThemeIcon name={theme.icon} className="w-10 h-10" />
                       </div>
-                      <div className={`text-center font-bold text-sm ${isSelected ? 'text-vibez-blue' : 'text-slate-400'}`}>
-                        {theme.name}
+                      <div className="text-center">
+                        <div className={`font-bold text-sm ${isSelected ? 'text-white' : 'text-slate-300'}`}>
+                          {theme.name}
+                        </div>
+                        <div className={`text-[10px] mt-1 leading-tight ${isSelected ? 'text-blue-200' : 'text-slate-500'}`}>
+                          {theme.description}
+                        </div>
                       </div>
                       {isSelected && (
                         <div className="absolute inset-0 border-2 border-vibez-purple rounded-xl pointer-events-none" />
@@ -124,7 +150,7 @@ const CardCreator: React.FC<CardCreatorProps> = ({ user, onCancel, onSuccess }) 
           <div className="lg:col-span-1">
             <div className="sticky top-8 bg-slate-800 rounded-2xl p-6 border border-slate-700 shadow-xl">
               <h3 className="font-action text-xl mb-4 text-slate-200">Preview Summary</h3>
-              
+
               <div className="space-y-4 mb-8">
                 <div className="flex justify-between items-center pb-2 border-b border-slate-700">
                   <span className="text-slate-400">Identity</span>
@@ -147,11 +173,10 @@ const CardCreator: React.FC<CardCreatorProps> = ({ user, onCancel, onSuccess }) 
               <button
                 disabled={!selectedThemeId || isGenerating}
                 onClick={handleGenerate}
-                className={`w-full py-4 rounded-xl font-action text-lg flex items-center justify-center gap-2 transition-all ${
-                  !selectedThemeId || isGenerating
+                className={`w-full py-4 rounded-xl font-action text-lg flex items-center justify-center gap-2 transition-all ${!selectedThemeId || isGenerating
                     ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
                     : 'bg-gradient-to-r from-vibez-blue to-vibez-purple text-white shadow-lg hover:shadow-vibez-purple/50 hover:scale-[1.02]'
-                }`}
+                  }`}
               >
                 {isGenerating ? (
                   <>
@@ -163,7 +188,7 @@ const CardCreator: React.FC<CardCreatorProps> = ({ user, onCancel, onSuccess }) 
                   </>
                 )}
               </button>
-              
+
               {isGenerating && (
                 <p className="text-center text-xs text-slate-400 mt-4 animate-pulse">
                   Connecting to the Multiverse... This may take up to 20 seconds.

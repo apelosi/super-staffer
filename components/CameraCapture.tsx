@@ -9,32 +9,34 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isStreamActive, setIsStreamActive] = useState(false);
+  const [stream, setStream] = useState<MediaStream | null>(null);
   const [error, setError] = useState<string>('');
 
   const startCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'user' } 
+      const newStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user' }
       });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        setIsStreamActive(true);
-        setError('');
-      }
+      setStream(newStream);
+      setIsStreamActive(true);
+      setError('');
     } catch (err) {
       console.error("Camera access error:", err);
       setError("Unable to access camera. Please use upload.");
     }
   };
 
+
   const stopCamera = useCallback(() => {
-    if (videoRef.current && videoRef.current.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream;
+    if (stream) {
       stream.getTracks().forEach(track => track.stop());
-      videoRef.current.srcObject = null;
-      setIsStreamActive(false);
+      setStream(null);
     }
-  }, []);
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    setIsStreamActive(false);
+  }, [stream]);
 
   const capturePhoto = () => {
     if (videoRef.current) {
@@ -65,62 +67,95 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture }) => {
   };
 
   React.useEffect(() => {
-    return () => stopCamera();
-  }, [stopCamera]);
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [stream]);
 
   return (
-    <div className="w-full max-w-md mx-auto space-y-4">
+    <div className="w-full flex-1 flex flex-col items-center justify-center space-y-8">
       {isStreamActive ? (
-        <div className="relative rounded-2xl overflow-hidden bg-black aspect-[3/4] shadow-xl">
-          <video 
-            ref={videoRef} 
-            autoPlay 
-            playsInline 
-            muted 
-            className="w-full h-full object-cover transform scale-x-[-1]" 
-          />
-          <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-6">
-            <button 
-              onClick={stopCamera}
-              className="p-3 bg-red-500 rounded-full text-white hover:bg-red-600 transition"
-            >
-              <X className="w-6 h-6" />
-            </button>
-            <button 
-              onClick={capturePhoto}
-              className="p-4 bg-white rounded-full border-4 border-vibez-purple shadow-lg hover:scale-110 transition"
-            >
-              <div className="w-4 h-4 bg-vibez-purple rounded-full" />
-            </button>
+        <div className="w-full max-w-lg animate-in zoom-in-95 duration-300">
+          <div className="relative aspect-[3/4] rounded-[2rem] overflow-hidden bg-black shadow-[0_0_50px_rgba(0,180,216,0.3)] border-4 border-white/10">
+            <video
+              ref={(el) => {
+                (videoRef as any).current = el;
+                if (el && stream) {
+                  el.srcObject = stream;
+                }
+              }}
+              autoPlay
+              playsInline
+              muted
+              className="w-full h-full object-cover transform scale-x-[-1]"
+            />
+
+            {/* Camera Overlay Decor */}
+            <div className="absolute inset-0 border-[20px] border-black/20 pointer-events-none" />
+            <div className="absolute top-4 left-4 w-8 h-8 border-t-2 border-l-2 border-white/40" />
+            <div className="absolute top-4 right-4 w-8 h-8 border-t-2 border-r-2 border-white/40" />
+            <div className="absolute bottom-4 left-4 w-8 h-8 border-b-2 border-l-2 border-white/40" />
+            <div className="absolute bottom-4 right-4 w-8 h-8 border-b-2 border-r-2 border-white/40" />
+
+            <div className="absolute bottom-8 left-0 right-0 flex justify-center items-center gap-8">
+              <button
+                onClick={stopCamera}
+                className="p-4 bg-slate-900/60 backdrop-blur-md rounded-full text-white hover:bg-red-500 transition-all border border-white/20"
+                title="Cancel"
+              >
+                <X className="w-6 h-6" />
+              </button>
+
+              <button
+                onClick={capturePhoto}
+                className="group relative p-1 bg-white rounded-full shadow-[0_0_30px_rgba(255,255,255,0.4)] hover:scale-110 active:scale-90 transition-all"
+              >
+                <div className="w-16 h-16 rounded-full border-4 border-[#0f172a] flex items-center justify-center bg-white">
+                  <div className="w-12 h-12 bg-gradient-to-tr from-vibez-blue to-vibez-purple rounded-full shadow-inner" />
+                </div>
+              </button>
+
+              <div className="w-14" /> {/* Spacer for symmetry */}
+            </div>
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-4">
+        <div className="w-full max-w-lg grid grid-cols-1 sm:grid-cols-2 gap-6 p-2">
           <button
             onClick={startCamera}
-            className="flex flex-col items-center justify-center p-8 bg-slate-800 rounded-2xl border-2 border-dashed border-slate-600 hover:border-vibez-blue hover:bg-slate-700 transition group"
+            className="flex flex-col items-center justify-center p-12 bg-slate-800/40 backdrop-blur-sm rounded-[2rem] border-2 border-slate-700/50 hover:border-vibez-blue hover:bg-slate-700/60 transition-all group relative overflow-hidden"
           >
-            <Camera className="w-10 h-10 text-vibez-blue mb-2 group-hover:scale-110 transition" />
-            <span className="text-slate-300 font-bold">Use Camera</span>
+            <div className="absolute inset-0 bg-gradient-to-br from-vibez-blue/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            <Camera className="w-16 h-16 text-vibez-blue mb-4 group-hover:scale-110 transition-transform duration-300" />
+            <span className="text-white font-action text-xl tracking-wider">USE CAMERA</span>
+            <span className="text-slate-500 text-xs mt-2 uppercase font-bold tracking-tighter">Instant Identity Scan</span>
           </button>
-          
+
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="flex flex-col items-center justify-center p-8 bg-slate-800 rounded-2xl border-2 border-dashed border-slate-600 hover:border-vibez-purple hover:bg-slate-700 transition group"
+            className="flex flex-col items-center justify-center p-12 bg-slate-800/40 backdrop-blur-sm rounded-[2rem] border-2 border-slate-700/50 hover:border-vibez-purple hover:bg-slate-700/60 transition-all group relative overflow-hidden"
           >
-            <Upload className="w-10 h-10 text-vibez-purple mb-2 group-hover:scale-110 transition" />
-            <span className="text-slate-300 font-bold">Upload File</span>
-            <input 
+            <div className="absolute inset-0 bg-gradient-to-br from-vibez-purple/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            <Upload className="w-16 h-16 text-vibez-purple mb-4 group-hover:scale-110 transition-transform duration-300" />
+            <span className="text-white font-action text-xl tracking-wider">UPLOAD FILE</span>
+            <span className="text-slate-500 text-xs mt-2 uppercase font-bold tracking-tighter">Legacy Archive Import</span>
+            <input
               ref={fileInputRef}
-              type="file" 
-              accept="image/*" 
-              className="hidden" 
+              type="file"
+              accept="image/*"
+              className="hidden"
               onChange={handleFileUpload}
             />
           </button>
         </div>
       )}
-      {error && <p className="text-red-400 text-center text-sm">{error}</p>}
+      {error && (
+        <div className="p-4 bg-red-500/10 border border-red-500/50 rounded-xl animate-in shake duration-500">
+          <p className="text-red-400 text-center text-sm font-bold uppercase tracking-widest">{error}</p>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,6 +1,28 @@
 import React, { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { THEMES } from '../constants';
+import {
+  Zap,
+  Sparkles,
+  Rocket,
+  Settings,
+  Sword,
+  Leaf,
+  Search,
+  Shield,
+  Castle,
+  Building,
+  Dna,
+  Cpu
+} from 'lucide-react';
+
+const ThemeIcon = ({ name, className }: { name: string, className?: string }) => {
+  const icons: Record<string, any> = {
+    Zap, Sparkles, Rocket, Settings, Sword, Leaf, Search, Shield, Castle, Building, Dna, Cpu
+  };
+  const IconComponent = icons[name] || Sparkles;
+  return <IconComponent className={className} />;
+};
 
 interface ParallaxHeroProps {
   onStart: () => void;
@@ -8,11 +30,9 @@ interface ParallaxHeroProps {
 
 const ParallaxHero: React.FC<ParallaxHeroProps> = ({ onStart }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { scrollY } = useScroll({ container: containerRef });
-
-  const y1 = useTransform(scrollY, [0, 500], [0, -200]);
-  const y2 = useTransform(scrollY, [0, 500], [0, -100]);
-  const y3 = useTransform(scrollY, [0, 500], [0, -300]);
+  const y1 = 0;
+  const y2 = 0;
+  const y3 = 0;
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#0f172a] text-white">
@@ -23,8 +43,8 @@ const ParallaxHero: React.FC<ParallaxHeroProps> = ({ onStart }) => {
       </div>
 
       <div className="container mx-auto px-4 pt-20 pb-32 relative z-10 flex flex-col items-center justify-center min-h-screen text-center">
-        
-        <motion.div 
+
+        <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
@@ -52,25 +72,28 @@ const ParallaxHero: React.FC<ParallaxHeroProps> = ({ onStart }) => {
 
         {/* Floating Icons Grid (Parallax simulation) */}
         <div className="absolute inset-0 pointer-events-none -z-10 opacity-30">
-          <motion.div style={{ y: y1 }} className="absolute top-20 left-10 text-6xl">⚡</motion.div>
-          <motion.div style={{ y: y2 }} className="absolute top-40 right-20 text-5xl">🛡️</motion.div>
-          <motion.div style={{ y: y3 }} className="absolute bottom-40 left-1/4 text-6xl">🚀</motion.div>
-          <motion.div style={{ y: y1 }} className="absolute bottom-20 right-1/3 text-5xl">🔥</motion.div>
-          <motion.div style={{ y: y2 }} className="absolute top-1/2 left-10 text-4xl">🔮</motion.div>
-          <motion.div style={{ y: y3 }} className="absolute top-1/3 right-10 text-6xl">⚔️</motion.div>
+          <motion.div style={{ y: y1 }} className="absolute top-20 left-10 text-6xl text-vibez-blue"><Zap className="w-16 h-16" /></motion.div>
+          <motion.div style={{ y: y2 }} className="absolute top-40 right-20 text-5xl text-vibez-purple"><Shield className="w-14 h-14" /></motion.div>
+          <motion.div style={{ y: y3 }} className="absolute bottom-40 left-1/4 text-6xl text-vibez-blue"><Rocket className="w-18 h-18" /></motion.div>
+          <motion.div style={{ y: y1 }} className="absolute bottom-20 right-1/3 text-5xl text-orange-500"><Settings className="w-14 h-14" /></motion.div>
+          <motion.div style={{ y: y2 }} className="absolute top-1/2 left-10 text-4xl text-vibez-purple"><Sparkles className="w-10 h-10" /></motion.div>
+          <motion.div style={{ y: y3 }} className="absolute top-1/3 right-10 text-6xl text-red-500"><Sword className="w-16 h-16" /></motion.div>
         </div>
 
         {/* Themes Showcase */}
         <div className="mt-32 w-full max-w-4xl">
-           <h3 className="font-comic text-2xl text-slate-400 mb-8">CHOOSE YOUR DESTINY</h3>
-           <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
-             {THEMES.map(theme => (
-               <div key={theme.id} className="flex flex-col items-center gap-2 p-2 bg-slate-800/50 rounded-lg backdrop-blur-sm border border-slate-700">
-                 <span className="text-3xl">{theme.icon}</span>
-                 <span className="text-[10px] uppercase font-bold text-slate-300">{theme.name.split(' ')[0]}</span>
-               </div>
-             ))}
-           </div>
+          <h3 className="font-comic text-2xl text-slate-400 mb-8">CHOOSE YOUR DESTINY</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {THEMES.map(theme => (
+              <div key={theme.id} className="flex flex-col items-center gap-2 p-3 bg-slate-800/50 rounded-lg backdrop-blur-sm border border-slate-700 hover:border-vibez-blue/50 transition-colors group">
+                <ThemeIcon name={theme.icon} className="w-8 h-8 text-slate-400 group-hover:text-vibez-blue group-hover:scale-110 transition-all" />
+                <div className="text-center">
+                  <span className="text-[10px] block uppercase font-bold text-slate-200">{theme.name}</span>
+                  <span className="text-[8px] block text-slate-400 leading-tight mt-1 px-1">{theme.description}</span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
