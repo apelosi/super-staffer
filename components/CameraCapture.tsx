@@ -122,25 +122,55 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture }) => {
           </div>
         </div>
       ) : (
-        <div className="w-full max-w-lg grid grid-cols-1 sm:grid-cols-2 gap-6 p-2">
+        <div className="w-full max-w-2xl grid grid-cols-1 sm:grid-cols-2 gap-8 p-2">
           <button
             onClick={startCamera}
-            className="flex flex-col items-center justify-center p-12 bg-slate-800/40 backdrop-blur-sm rounded-[2rem] border-2 border-slate-700/50 hover:border-vibez-blue hover:bg-slate-700/60 transition-all group relative overflow-hidden"
+            className="group flex flex-col items-center justify-center p-10 bg-white rounded-3xl border border-gray-200 hover:border-2 hover:shadow-xl transition-all duration-300 relative overflow-hidden"
+            style={{
+              borderColor: undefined
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = '#00B4D8';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = '';
+            }}
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-vibez-blue/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-            <Camera className="w-16 h-16 text-vibez-blue mb-4 group-hover:scale-110 transition-transform duration-300" />
-            <span className="text-white font-action text-xl tracking-wider">USE CAMERA</span>
-            <span className="text-slate-500 text-xs mt-2 uppercase font-bold tracking-tighter">Instant Identity Scan</span>
+            {/* Icon with gradient background */}
+            <div className="w-28 h-28 rounded-2xl mb-6 flex items-center justify-center transition-all duration-300"
+              style={{
+                background: 'linear-gradient(135deg, rgba(0, 180, 216, 0.08), rgba(114, 9, 183, 0.08))'
+              }}
+            >
+              <Camera className="w-14 h-14 text-vibez-blue transition-transform duration-300 group-hover:scale-110" strokeWidth={2.5} />
+            </div>
+            <span className="font-action text-lg uppercase text-gray-900 mb-2 tracking-wide">USE CAMERA</span>
+            <span className="text-gray-500 text-xs uppercase font-bold tracking-wider">Instant Identity Scan</span>
           </button>
 
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="flex flex-col items-center justify-center p-12 bg-slate-800/40 backdrop-blur-sm rounded-[2rem] border-2 border-slate-700/50 hover:border-vibez-purple hover:bg-slate-700/60 transition-all group relative overflow-hidden"
+            className="group flex flex-col items-center justify-center p-10 bg-white rounded-3xl border border-gray-200 hover:border-2 hover:shadow-xl transition-all duration-300 relative overflow-hidden"
+            style={{
+              borderColor: undefined
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = '#7209B7';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = '';
+            }}
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-vibez-purple/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-            <Upload className="w-16 h-16 text-vibez-purple mb-4 group-hover:scale-110 transition-transform duration-300" />
-            <span className="text-white font-action text-xl tracking-wider">UPLOAD FILE</span>
-            <span className="text-slate-500 text-xs mt-2 uppercase font-bold tracking-tighter">Legacy Archive Import</span>
+            {/* Icon with gradient background */}
+            <div className="w-28 h-28 rounded-2xl mb-6 flex items-center justify-center transition-all duration-300"
+              style={{
+                background: 'linear-gradient(135deg, rgba(114, 9, 183, 0.08), rgba(0, 180, 216, 0.08))'
+              }}
+            >
+              <Upload className="w-14 h-14 text-vibez-purple transition-transform duration-300 group-hover:scale-110" strokeWidth={2.5} />
+            </div>
+            <span className="font-action text-lg uppercase text-gray-900 mb-2 tracking-wide">UPLOAD FILE</span>
+            <span className="text-gray-500 text-xs uppercase font-bold tracking-wider">Legacy Archive Import</span>
             <input
               ref={fileInputRef}
               type="file"

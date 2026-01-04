@@ -1,0 +1,35 @@
+import React from 'react';
+import { VIBEZ_LOGO_SVG } from '../constants';
+
+const Footer: React.FC = () => {
+    return (
+        <footer className="bg-[#0f172a] border-t border-slate-800 pt-8 pb-8">
+            <div className="container mx-auto px-4">
+                <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+
+                    {/* Brand Left */}
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8">
+                            <div dangerouslySetInnerHTML={{ __html: VIBEZ_LOGO_SVG }} />
+                        </div>
+                        <h3 className="font-action text-xl text-white tracking-wide">
+                            SUPER <span className="text-transparent bg-clip-text bg-gradient-to-r from-vibez-blue to-vibez-purple">STAFFER</span>
+                        </h3>
+                    </div>
+
+                    {/* Copyright Center */}
+                    <div className="text-slate-500 text-sm">
+                        &copy; {new Date().getFullYear()} <a href="https://vibez.ventures" target="_blank" rel="noopener noreferrer" className="hover:text-vibez-blue transition-colors underline decoration-slate-500 hover:decoration-vibez-blue">Vibez Ventures</a>. All rights reserved.
+                    </div>
+
+                    {/* Made With Right */}
+                    <div className="flex items-center gap-2 text-sm text-slate-500">
+                        <span>Made with 🫰 in 🇸🇬</span>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    );
+};
+
+export default Footer;

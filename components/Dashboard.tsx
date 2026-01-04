@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { UserButton } from '@clerk/clerk-react';
 import { User, CardData } from '../types';
 import TradingCard from './TradingCard';
-import { Plus, Settings, LogOut, Edit2 } from 'lucide-react';
-import CameraCapture from './CameraCapture';
+import { Plus, Eye, EyeOff } from 'lucide-react';
+import { storage } from '../services/storage';
+
+import Header from './Header';
+import Footer from './Footer';
 
 interface DashboardProps {
   user: User;
@@ -17,147 +21,157 @@ const Dashboard: React.FC<DashboardProps> = ({
   user,
   cards,
   onCreateClick,
-  onLogout,
   onDeleteCard,
-  onUpdateUser
 }) => {
-  const [isEditingProfile, setIsEditingProfile] = useState(false);
-  const [editName, setEditName] = useState(user.name);
-  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [cardToDelete, setCardToDelete] = useState<string | null>(null);
+  const [localCards, setLocalCards] = useState(cards);
 
-  const handleSaveProfile = () => {
-    onUpdateUser({ ...user, name: editName });
-    setIsEditingProfile(false);
+  // Sync localCards when cards prop changes
+  useEffect(() => {
+    setLocalCards(cards);
+  }, [cards]);
+
+  const handleDeleteRequest = (id: string) => {
+    setCardToDelete(id);
   };
 
-  const handleUpdateSelfie = (newSelfie: string) => {
-    onUpdateUser({ ...user, selfie: newSelfie });
-    setIsCameraOpen(false);
+  const confirmDelete = async () => {
+    if (cardToDelete) {
+      try {
+        console.log('Deleting card:', cardToDelete);
+        await onDeleteCard(cardToDelete);
+        console.log('Card deleted successfully');
+        setCardToDelete(null);
+      } catch (error) {
+        console.error('Failed to delete card:', error);
+        alert('Failed to delete card. Please try again.');
+      }
+    }
+  };
+
+  const handleToggleVisibility = async (cardId: string) => {
+    const card = localCards.find((c: CardData) => c.id === cardId);
+    if (!card) return;
+
+    const newIsPublic = !card.isPublic;
+
+    // Optimistic update
+    setLocalCards((prev: CardData[]) =>
+      prev.map((c: CardData) => c.id === cardId ? { ...c, isPublic: newIsPublic } : c)
+    );
+
+    try {
+      await storage.toggleCardVisibility(cardId, newIsPublic);
+    } catch (error) {
+      console.error('Failed to toggle visibility:', error);
+      // Revert on error
+      setLocalCards((prev: CardData[]) =>
+        prev.map((c: CardData) => c.id === cardId ? { ...c, isPublic: !newIsPublic } : c)
+      );
+    }
   };
 
   return (
-    <div className="min-h-screen bg-[#0f172a] pb-20">
-      {/* Top Navigation Bar */}
-      <div className="sticky top-0 z-40 bg-slate-900/80 backdrop-blur-md border-b border-slate-700 px-4 py-3 flex justify-between items-center">
-        <div className="font-action text-xl text-transparent bg-clip-text bg-gradient-to-r from-vibez-blue to-vibez-purple">
-          SUPER STAFFERS
-        </div>
+    <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col">
+      <Header actions={
         <div className="flex gap-2">
-          <button
-            onClick={() => setIsEditingProfile(!isEditingProfile)}
-            className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-full transition"
-          >
-            <Settings className="w-5 h-5" />
-          </button>
-          <button
-            onClick={onLogout}
-            className="p-2 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-full transition"
-          >
-            <LogOut className="w-5 h-5" />
-          </button>
+          <UserButton
+            appearance={{
+              elements: {
+                avatarBox: 'w-10 h-10',
+                userButtonPopoverCard: 'bg-white border border-gray-200 shadow-lg',
+                userButtonPopoverActionButton: 'text-gray-700 hover:bg-gray-100',
+              },
+            }}
+          />
         </div>
-      </div>
+      } />
 
-      {/* Profile Edit Section */}
-      {isEditingProfile && (
-        <div className="bg-slate-800/50 border-b border-slate-700 animate-in slide-in-from-top duration-500 overflow-hidden">
-          <div className="max-w-2xl mx-auto p-6 md:p-8">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-action text-white">PROFILE CUSTOMIZATION</h3>
-              <button onClick={() => setIsEditingProfile(false)} className="text-slate-500 hover:text-white">
-                <X className="w-6 h-6" />
-              </button>
-            </div>
+      <main className="flex-1 pt-24">
 
-            <div className="grid md:grid-cols-2 gap-8">
-              <div className="space-y-6">
-                <div>
-                  <label className="text-xs text-vibez-blue uppercase font-bold tracking-widest block mb-2">OPERATIVE NAME</label>
-                  <input
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    className="w-full bg-[#0f172a] border-2 border-slate-700 focus:border-vibez-blue p-4 rounded-xl text-white outline-none transition-all font-action text-lg"
-                  />
-                </div>
+        {/* Main Content */}
+        <div className="container mx-auto px-6 py-12">
+
+          {/* Welcome Header */}
+          <div className="text-center mb-16">
+            <h1 className="text-4xl md:text-6xl font-action mb-4 bg-clip-text text-transparent bg-gradient-to-r from-vibez-blue to-vibez-purple">
+              WELCOME, {user.name.toUpperCase()}
+            </h1>
+            <p className="text-gray-600 text-lg font-comic">
+              {cards.length === 0 ? "You haven't created any cards yet." : `You have ${cards.length} trading card${cards.length === 1 ? '' : 's'}.`}
+            </p>
+          </div>
+
+          {/* Gallery */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 justify-items-center">
+
+            {/* Create New Card Button (First item in grid) */}
+            <button
+              onClick={onCreateClick}
+              className="w-full max-w-sm aspect-[2.5/3.5] rounded-3xl border-4 border-dashed border-gray-300 bg-white flex flex-col items-center justify-center text-gray-400 hover:text-vibez-blue hover:border-vibez-blue hover:bg-gradient-to-br hover:from-blue-50 hover:to-purple-50 transition-all group shadow-sm hover:shadow-lg"
+            >
+              <div className="p-5 rounded-full bg-gray-100 group-hover:bg-vibez-blue/10 mb-5 transition-colors">
+                <Plus className="w-10 h-10 group-hover:scale-110 transition-transform" />
+              </div>
+              <span className="font-action text-xl">CREATE NEW CARD</span>
+            </button>
+
+            {/* Existing Cards */}
+            {localCards.map((card: CardData) => (
+              <div key={card.id} className="relative w-full max-w-sm">
+                <TradingCard
+                  card={card}
+                  user={user}
+                  onDelete={handleDeleteRequest}
+                />
+                {/* Public/Private Toggle */}
                 <button
-                  onClick={handleSaveProfile}
-                  className="w-full py-4 bg-white text-[#0f172a] font-action text-xl rounded-xl hover:bg-vibez-blue hover:text-white transition-all shadow-lg"
+                  onClick={() => handleToggleVisibility(card.id)}
+                  className="absolute top-4 right-4 p-3 bg-white/90 backdrop-blur-sm rounded-full border-2 border-gray-200 hover:border-vibez-blue text-gray-600 transition-all group z-10 shadow-lg"
+                  title={card.isPublic ? 'Public - Click to make private' : 'Private - Click to make public'}
                 >
-                  SAVE CHANGES
+                  {card.isPublic ? (
+                    <Eye className="w-5 h-5 text-vibez-blue" />
+                  ) : (
+                    <EyeOff className="w-5 h-5 text-gray-400 group-hover:text-vibez-blue" />
+                  )}
                 </button>
               </div>
+            ))}
 
-              <div className="space-y-4">
-                <label className="text-xs text-vibez-purple uppercase font-bold tracking-widest block">IDENTITY SCAN</label>
-                <div className="flex items-center gap-6">
-                  <div className="relative group">
-                    <div className="absolute inset-0 bg-vibez-purple rounded-2xl blur-lg opacity-20 group-hover:opacity-40 transition-opacity" />
-                    <img src={user.selfie} alt="Current" className="relative w-24 h-24 rounded-2xl object-cover border-2 border-slate-600 shadow-xl" />
-                  </div>
-                  <button
-                    onClick={() => setIsCameraOpen(true)}
-                    className="flex items-center gap-2 px-5 py-3 bg-slate-700 rounded-xl text-sm font-bold text-white hover:bg-slate-600 transition-colors"
-                  >
-                    <Edit2 className="w-4 h-4" /> RETAKE SCAN
-                  </button>
-                </div>
-                {isCameraOpen && (
-                  <div className="mt-4 p-4 bg-[#0f172a] rounded-2xl border border-slate-700">
-                    <CameraCapture onCapture={handleUpdateSelfie} />
-                    <button
-                      onClick={() => setIsCameraOpen(false)}
-                      className="w-full mt-4 py-2 text-slate-500 font-bold uppercase text-xs hover:text-slate-300"
-                    >
-                      CANCEL SCAN
-                    </button>
-                  </div>
-                )}
+          </div>
+        </div>
+      </main>
+      <Footer />
+
+      {/* Delete Confirmation Modal */}
+      {
+        cardToDelete && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-white border-2 border-gray-200 rounded-3xl p-10 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200">
+              <h3 className="text-3xl font-action mb-4 text-center text-red-600 tracking-wide">DESTROY CARD?</h3>
+              <p className="text-gray-600 text-center mb-10 text-lg">
+                Are you sure you want to destroy this card? It will be lost in the multiverse forever.
+              </p>
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setCardToDelete(null)}
+                  className="flex-1 py-4 bg-gray-200 text-gray-700 font-bold rounded-full hover:bg-gray-300 transition shadow-sm"
+                >
+                  CANCEL
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  className="flex-1 py-4 bg-red-500 text-white font-bold rounded-full hover:bg-red-600 transition shadow-lg"
+                >
+                  DESTROY
+                </button>
               </div>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
-
-        {/* Welcome Header */}
-        <div className="text-center mb-10">
-          <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
-            Welcome, {user.name}
-          </h1>
-          <p className="text-slate-400">
-            {cards.length === 0 ? "You haven't created any cards yet." : `You have ${cards.length} trading card${cards.length === 1 ? '' : 's'}.`}
-          </p>
-        </div>
-
-        {/* Gallery */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
-
-          {/* Create New Card Button (First item in grid) */}
-          <button
-            onClick={onCreateClick}
-            className="w-full max-w-sm aspect-[2.5/3.5] rounded-xl border-4 border-dashed border-slate-700 bg-slate-800/50 flex flex-col items-center justify-center text-slate-500 hover:text-vibez-blue hover:border-vibez-blue hover:bg-slate-800 transition-all group"
-          >
-            <div className="p-4 rounded-full bg-slate-700 group-hover:bg-vibez-blue/20 mb-4 transition-colors">
-              <Plus className="w-8 h-8 group-hover:scale-110 transition-transform" />
-            </div>
-            <span className="font-action text-xl">CREATE NEW CARD</span>
-          </button>
-
-          {/* Existing Cards */}
-          {cards.map(card => (
-            <TradingCard
-              key={card.id}
-              card={card}
-              user={user}
-              onDelete={onDeleteCard}
-            />
-          ))}
-
-        </div>
-      </div>
-    </div>
+        )
+      }
+    </div >
   );
 };
 

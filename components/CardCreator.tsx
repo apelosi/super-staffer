@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, Alignment, ThemeName } from '../types';
 import { THEMES } from '../constants';
 import { generateCardImage } from '../services/gemini';
 import {
   ArrowLeft,
   Sparkles,
-  AlertTriangle,
   Zap,
   Rocket,
   Settings,
@@ -16,16 +15,13 @@ import {
   Castle,
   Building,
   Dna,
-  Cpu
+  Cpu,
+  ArrowRight
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-const ThemeIcon = ({ name, className }: { name: string, className?: string }) => {
-  const icons: Record<string, any> = {
-    Zap, Sparkles, Rocket, Settings, Sword, Leaf, Search, Shield, Castle, Building, Dna, Cpu
-  };
-  const IconComponent = icons[name] || Sparkles;
-  return <IconComponent className={className} />;
+const iconMap: Record<string, React.ComponentType<any>> = {
+  Zap, Sparkles, Rocket, Settings, Sword, Leaf, Search, Shield, Castle, Building, Dna, Cpu
 };
 
 interface CardCreatorProps {
@@ -34,169 +30,289 @@ interface CardCreatorProps {
   onSuccess: (imageUrl: string, theme: ThemeName, alignment: Alignment) => void;
 }
 
+type WizardStep = 'alignment' | 'theme' | 'generating';
+
 const CardCreator: React.FC<CardCreatorProps> = ({ user, onCancel, onSuccess }) => {
-  const [selectedThemeId, setSelectedThemeId] = useState<string | null>(null);
-  const [alignment, setAlignment] = useState<Alignment>('Hero');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [error, setError] = useState<string>('');
+  const [step, setStep] = useState<WizardStep>('alignment');
+  const [alignment, setAlignment] = useState<Alignment | null>(null);
+  const [selectedTheme, setSelectedTheme] = useState<ThemeName | null>(null);
+  const [hoveredTheme, setHoveredTheme] = useState<ThemeName | null>(null);
 
-  const handleGenerate = async () => {
-    if (!selectedThemeId) {
-      setError("Please select a theme first!");
-      return;
+  // Load selected theme from localStorage on mount (from homepage)
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('selectedTheme');
+    if (savedTheme) {
+      const theme = THEMES.find(t => t.name === savedTheme);
+      if (theme) {
+        setSelectedTheme(theme.name);
+        // If coming from homepage with theme, skip to alignment
+        setStep('alignment');
+      }
     }
-    const theme = THEMES.find(t => t.id === selectedThemeId);
-    if (!theme) return;
+  }, []);
 
-    setIsGenerating(true);
-    setError('');
+  const handleAlignmentSelect = (align: Alignment) => {
+    setAlignment(align);
+    setStep('theme');
+  };
 
-    try {
-      const imageUrl = await generateCardImage(user.selfie, theme.name, alignment);
-      onSuccess(imageUrl, theme.name, alignment);
-    } catch (err: any) {
-      console.error(err);
-      setError(err.message || "Failed to generate card. Please try again.");
-    } finally {
-      setIsGenerating(false);
+  const handleThemeSelect = async (themeName: ThemeName) => {
+    setSelectedTheme(themeName);
+
+    // If we already have alignment, proceed to generation
+    if (alignment) {
+      await generateCard(themeName, alignment);
     }
   };
 
-  return (
-    <div className="min-h-screen bg-slate-900 text-white p-4 md:p-8 pb-32">
-      <div className="max-w-5xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <button
-            onClick={onCancel}
-            className="p-2 bg-slate-800 rounded-full hover:bg-slate-700 transition"
-          >
-            <ArrowLeft className="w-6 h-6" />
-          </button>
-          <h2 className="font-action text-3xl">Create New Card</h2>
-        </div>
+  const generateCard = async (theme: ThemeName, align: Alignment) => {
+    setStep('generating');
 
-        {error && (
-          <div className="mb-6 p-4 bg-red-500/20 border border-red-500 rounded-lg flex items-center gap-3 text-red-200">
-            <AlertTriangle className="w-5 h-5" />
-            {error}
-          </div>
-        )}
+    try {
+      const imageUrl = await generateCardImage(user.selfie, theme, align);
+      onSuccess(imageUrl, theme, align);
+    } catch (err: any) {
+      console.error(err);
+      // On error, go back to theme selection
+      setStep('theme');
+      alert(err.message || "Failed to generate card. Please try again.");
+    }
+  };
 
-        <div className="grid lg:grid-cols-3 gap-8">
+  const handleBack = () => {
+    if (step === 'theme') {
+      setStep('alignment');
+      setAlignment(null);
+    } else if (step === 'alignment') {
+      onCancel();
+    }
+  };
 
-          {/* Left: Controls */}
-          <div className="lg:col-span-2 space-y-8">
+  // Alignment Selection Screen
+  if (step === 'alignment') {
+    return (
+      <div className="min-h-screen bg-white flex flex-col">
+        <div className="flex-1 flex items-center justify-center p-6">
+          <div className="w-full max-w-4xl">
+            {/* Back button */}
+            <button
+              onClick={onCancel}
+              className="mb-8 p-3 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
+            >
+              <ArrowLeft className="w-6 h-6 text-gray-700" />
+            </button>
 
-            {/* Alignment Selection */}
-            <div className="space-y-4">
-              <label className="text-slate-400 font-bold uppercase tracking-wider text-sm">Select Alignment</label>
-              <div className="grid grid-cols-2 gap-4">
-                {(['Hero', 'Villain'] as Alignment[]).map((align) => (
-                  <button
-                    key={align}
-                    onClick={() => setAlignment(align)}
-                    className={`p-4 rounded-xl border-2 font-action text-xl transition-all ${alignment === align
-                        ? align === 'Hero' ? 'border-blue-500 bg-blue-500/20 text-blue-300 shadow-[0_0_20px_rgba(59,130,246,0.3)]' : 'border-red-500 bg-red-500/20 text-red-300 shadow-[0_0_20px_rgba(239,68,68,0.3)]'
-                        : 'border-slate-700 bg-slate-800 text-slate-500 hover:border-slate-600'
-                      }`}
-                  >
-                    {align.toUpperCase()}
-                  </button>
-                ))}
-              </div>
-            </div>
+            {/* Question */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center mb-16"
+            >
+              <h1 className="font-action text-4xl md:text-6xl text-gray-900 mb-4">
+                CHOOSE YOUR PATH
+              </h1>
+              <p className="font-comic text-xl text-gray-600">
+                Will you be a hero or a villain?
+              </p>
+            </motion.div>
 
-            {/* Theme Selection */}
-            <div className="space-y-4">
-              <label className="text-slate-400 font-bold uppercase tracking-wider text-sm">Select Theme</label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                {THEMES.map((theme) => {
-                  const isSelected = selectedThemeId === theme.id;
-                  return (
-                    <motion.button
-                      key={theme.id}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => setSelectedThemeId(theme.id)}
-                      className={`relative flex flex-col items-center p-3 rounded-xl border-2 transition-all overflow-hidden ${isSelected
-                          ? 'border-vibez-purple bg-gradient-to-br from-slate-800 to-slate-900 shadow-lg ring-2 ring-vibez-purple/50'
-                          : 'border-slate-700 bg-slate-800 hover:border-slate-600'
-                        }`}
-                    >
-                      <div className={`mb-2 ${isSelected ? 'scale-110 transition-transform text-vibez-blue' : 'text-slate-400'}`}>
-                        <ThemeIcon name={theme.icon} className="w-10 h-10" />
-                      </div>
-                      <div className="text-center">
-                        <div className={`font-bold text-sm ${isSelected ? 'text-white' : 'text-slate-300'}`}>
-                          {theme.name}
-                        </div>
-                        <div className={`text-[10px] mt-1 leading-tight ${isSelected ? 'text-blue-200' : 'text-slate-500'}`}>
-                          {theme.description}
-                        </div>
-                      </div>
-                      {isSelected && (
-                        <div className="absolute inset-0 border-2 border-vibez-purple rounded-xl pointer-events-none" />
-                      )}
-                    </motion.button>
-                  );
-                })}
-              </div>
-            </div>
-
-          </div>
-
-          {/* Right: Summary & Action */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-8 bg-slate-800 rounded-2xl p-6 border border-slate-700 shadow-xl">
-              <h3 className="font-action text-xl mb-4 text-slate-200">Preview Summary</h3>
-
-              <div className="space-y-4 mb-8">
-                <div className="flex justify-between items-center pb-2 border-b border-slate-700">
-                  <span className="text-slate-400">Identity</span>
-                  <span className="font-bold text-white">{user.name}</span>
-                </div>
-                <div className="flex justify-between items-center pb-2 border-b border-slate-700">
-                  <span className="text-slate-400">Alignment</span>
-                  <span className={`font-bold ${alignment === 'Hero' ? 'text-blue-400' : 'text-red-400'}`}>
-                    {alignment}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center pb-2 border-b border-slate-700">
-                  <span className="text-slate-400">Theme</span>
-                  <span className="font-bold text-vibez-blue">
-                    {THEMES.find(t => t.id === selectedThemeId)?.name || 'Not Selected'}
-                  </span>
-                </div>
-              </div>
-
-              <button
-                disabled={!selectedThemeId || isGenerating}
-                onClick={handleGenerate}
-                className={`w-full py-4 rounded-xl font-action text-lg flex items-center justify-center gap-2 transition-all ${!selectedThemeId || isGenerating
-                    ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-vibez-blue to-vibez-purple text-white shadow-lg hover:shadow-vibez-purple/50 hover:scale-[1.02]'
-                  }`}
+            {/* Alignment Options */}
+            <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+              <motion.button
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+                onClick={() => handleAlignmentSelect('Hero')}
+                className="group relative bg-gradient-to-br from-blue-500 to-cyan-400 rounded-3xl p-12 text-white hover:shadow-2xl transition-all duration-300 hover:scale-105"
               >
-                {isGenerating ? (
-                  <>
-                    <Sparkles className="animate-spin" /> Generating...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles /> GENERATE CARD
-                  </>
-                )}
-              </button>
+                <div className="absolute inset-0 bg-white/10 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="relative">
+                  <Shield className="w-20 h-20 mx-auto mb-6" strokeWidth={2} />
+                  <h2 className="font-action text-4xl mb-3">HERO</h2>
+                  <p className="font-comic text-lg opacity-90">
+                    Fight for justice and protect the innocent
+                  </p>
+                </div>
+              </motion.button>
 
-              {isGenerating && (
-                <p className="text-center text-xs text-slate-400 mt-4 animate-pulse">
-                  Connecting to the Multiverse... This may take up to 20 seconds.
-                </p>
-              )}
+              <motion.button
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+                onClick={() => handleAlignmentSelect('Villain')}
+                className="group relative bg-gradient-to-br from-red-600 to-purple-600 rounded-3xl p-12 text-white hover:shadow-2xl transition-all duration-300 hover:scale-105"
+              >
+                <div className="absolute inset-0 bg-white/10 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="relative">
+                  <Sparkles className="w-20 h-20 mx-auto mb-6" strokeWidth={2} />
+                  <h2 className="font-action text-4xl mb-3">VILLAIN</h2>
+                  <p className="font-comic text-lg opacity-90">
+                    Embrace chaos and conquer the world
+                  </p>
+                </div>
+              </motion.button>
             </div>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  // Theme Selection Screen
+  if (step === 'theme') {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
+        <div className="container mx-auto px-6 py-12">
+          {/* Back button */}
+          <button
+            onClick={handleBack}
+            className="mb-8 p-3 bg-white border border-gray-200 hover:bg-gray-50 rounded-full transition-colors shadow-sm"
+          >
+            <ArrowLeft className="w-6 h-6 text-gray-700" />
+          </button>
+
+          {/* Question */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-12"
+          >
+            <h1 className="font-action text-4xl md:text-6xl text-gray-900 mb-4">
+              CHOOSE YOUR THEME
+            </h1>
+            <p className="font-comic text-xl text-gray-600">
+              Select from 12 unique superhero themes
+            </p>
+            {alignment && (
+              <p className="font-comic text-lg text-gray-500 mt-2">
+                Path: <span className={alignment === 'Hero' ? 'text-blue-600' : 'text-red-600'}>{alignment}</span>
+              </p>
+            )}
+          </motion.div>
+
+          {/* Theme Grid - Same as Homepage */}
+          <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {THEMES.map((theme, index) => {
+              const isHovered = hoveredTheme === theme.name;
+
+              return (
+                <motion.div
+                  key={theme.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.05 }}
+                  onMouseEnter={() => setHoveredTheme(theme.name)}
+                  onMouseLeave={() => setHoveredTheme(null)}
+                  className={`group relative bg-white rounded-3xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden ${
+                    isHovered ? 'border-2' : 'border border-gray-200'
+                  }`}
+                  style={{
+                    borderColor: isHovered ? theme.colors.from : undefined
+                  }}
+                >
+                  {/* Content wrapper - fixed height with space for button */}
+                  <div className="flex flex-col items-center text-center h-full">
+                    {/* Icon with gradient background circle */}
+                    <div
+                      className="w-24 h-24 rounded-2xl mb-4 flex items-center justify-center transition-all duration-300"
+                      style={{
+                        background: `linear-gradient(135deg, ${theme.colors.from}15, ${theme.colors.to}15)`
+                      }}
+                    >
+                      {(() => {
+                        const IconComponent = iconMap[theme.icon];
+                        return IconComponent ? (
+                          <IconComponent
+                            className="transition-all duration-300"
+                            size={48}
+                            strokeWidth={2.5}
+                            style={{
+                              color: theme.colors.from
+                            }}
+                          />
+                        ) : null;
+                      })()}
+                    </div>
+
+                    <h3 className="font-action text-sm uppercase mb-2 text-gray-900 transition-colors duration-300">
+                      {theme.name}
+                    </h3>
+                    <p className="text-xs leading-relaxed text-gray-600 mb-4 flex-1">
+                      {theme.description}
+                    </p>
+
+                    {/* Button area - always present, fades in on hover */}
+                    <div className={`w-full transition-opacity duration-300 ${
+                      isHovered ? 'opacity-100' : 'opacity-0'
+                    }`}>
+                      <button
+                        onClick={() => handleThemeSelect(theme.name)}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 font-action text-xs font-bold uppercase tracking-wide transition-all duration-300 rounded-lg"
+                        style={{
+                          backgroundColor: isHovered ? theme.colors.from : 'transparent',
+                          color: 'white'
+                        }}
+                      >
+                        <span>CREATE</span>
+                        <ArrowRight className="w-3.5 h-3.5" strokeWidth={3} />
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Generating Screen
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-vibez-blue to-vibez-purple flex items-center justify-center p-6">
+      <div className="text-center">
+        <motion.div
+          animate={{
+            rotate: 360,
+            scale: [1, 1.2, 1]
+          }}
+          transition={{
+            rotate: { duration: 2, repeat: Infinity, ease: "linear" },
+            scale: { duration: 1.5, repeat: Infinity }
+          }}
+          className="mb-8 inline-block"
+        >
+          <Sparkles className="w-24 h-24 text-white" strokeWidth={2} />
+        </motion.div>
+
+        <h2 className="font-action text-4xl md:text-5xl text-white mb-4">
+          GENERATING YOUR CARD
+        </h2>
+        <p className="font-comic text-xl text-white/90 mb-8">
+          Connecting to the Multiverse...
+        </p>
+
+        <div className="flex items-center justify-center gap-2">
+          <motion.div
+            animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 1, repeat: Infinity, delay: 0 }}
+            className="w-3 h-3 bg-white rounded-full"
+          />
+          <motion.div
+            animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 1, repeat: Infinity, delay: 0.2 }}
+            className="w-3 h-3 bg-white rounded-full"
+          />
+          <motion.div
+            animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 1, repeat: Infinity, delay: 0.4 }}
+            className="w-3 h-3 bg-white rounded-full"
+          />
+        </div>
+
+        <p className="font-comic text-sm text-white/70 mt-8">
+          This may take up to 20 seconds
+        </p>
       </div>
     </div>
   );

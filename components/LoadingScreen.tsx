@@ -1,0 +1,53 @@
+import React from 'react';
+import { motion } from 'framer-motion';
+import { VIBEZ_LOGO_SVG } from '../constants';
+
+const LoadingScreen: React.FC = () => {
+    return (
+        <div className="min-h-screen bg-white flex items-center justify-center p-6">
+            <div className="text-center">
+                {/* Spinning Logo - using the shield logo */}
+                <motion.div
+                    animate={{
+                        rotate: 360,
+                        scale: [1, 1.2, 1]
+                    }}
+                    transition={{
+                        rotate: { duration: 2, repeat: Infinity, ease: "linear" },
+                        scale: { duration: 1.5, repeat: Infinity }
+                    }}
+                    className="mb-8 inline-block w-24 h-24"
+                >
+                    <div dangerouslySetInnerHTML={{ __html: VIBEZ_LOGO_SVG }} />
+                </motion.div>
+
+                <h2 className="font-action text-4xl md:text-5xl text-gray-900 mb-4">
+                    LOADING
+                </h2>
+                <p className="font-comic text-xl text-gray-600 mb-8">
+                    Completing a mission...
+                </p>
+
+                <div className="flex items-center justify-center gap-2">
+                    <motion.div
+                        animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
+                        transition={{ duration: 1, repeat: Infinity, delay: 0 }}
+                        className="w-3 h-3 bg-vibez-blue rounded-full"
+                    />
+                    <motion.div
+                        animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
+                        transition={{ duration: 1, repeat: Infinity, delay: 0.2 }}
+                        className="w-3 h-3 bg-vibez-blue rounded-full"
+                    />
+                    <motion.div
+                        animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
+                        transition={{ duration: 1, repeat: Infinity, delay: 0.4 }}
+                        className="w-3 h-3 bg-vibez-blue rounded-full"
+                    />
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default LoadingScreen;

@@ -15,8 +15,9 @@ export type ThemeName =
 export type Alignment = 'Hero' | 'Villain';
 
 export interface User {
+  clerkId: string;           // Clerk user ID
   name: string;
-  selfie: string; // Base64 string
+  selfie: string;            // Cloud storage URL (Cloudinary)
 }
 
 export interface CardData {
@@ -25,6 +26,8 @@ export interface CardData {
   imageUrl: string;
   theme: ThemeName;
   alignment: Alignment;
+  userName: string;          // User's name at time of creation
+  isPublic: boolean;         // Public/private visibility toggle
 }
 
 export interface ThemeDef {
@@ -33,4 +36,8 @@ export interface ThemeDef {
   description: string;
   icon: string; // Emoji or Lucide icon name placeholder
   color: string;
+  colors: {
+    from: string;
+    to: string;
+  };
 }
