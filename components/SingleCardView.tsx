@@ -879,7 +879,7 @@ const SingleCardView: React.FC<SingleCardViewProps> = ({
                       <h2 className="font-action text-3xl text-white mb-3 bg-clip-text text-transparent bg-gradient-to-r from-vibez-blue to-vibez-purple" style={{
                         WebkitTextFillColor: 'white'
                       }}>
-                        CREATE YOUR CARDS
+                        CREATE YOURS
                       </h2>
                       <p className="font-comic text-lg text-white/90 mb-6">
                         Join the Super Staffers and to create and share your own cards!
