@@ -10,11 +10,23 @@
   --color-card-bg: #1a1a2e;
 }
 
+/* Prevent font flashing by ensuring fonts are loaded before rendering */
+html {
+  font-family: "Roboto", sans-serif;
+}
+
 body {
   background-color: #0f172a;
   color: white;
   font-family: var(--font-body);
   overflow-x: hidden;
+}
+
+/* Font loading optimization - ensure fonts are rendered correctly */
+.font-comic,
+.font-action,
+.font-body {
+  font-display: block;
 }
 
 /* Hide scrollbar for clean UI in cards */
@@ -25,4 +37,9 @@ body {
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* Radial gradient utilities */
+.bg-gradient-radial {
+  background-image: radial-gradient(circle, var(--tw-gradient-stops));
 }

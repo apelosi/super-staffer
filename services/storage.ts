@@ -100,6 +100,36 @@ export const storage = {
   },
 
   /**
+   * Get a single card by ID (for public viewing)
+   */
+  getCardById: async (cardId: string): Promise<CardData | null> => {
+    // Try local cache first
+    const localCard = await dbRequest<CardData>(
+      STORE_CARDS,
+      'readonly',
+      store => store.get(cardId)
+    );
+
+    if (localCard) {
+      return localCard;
+    }
+
+    // Try fetching from cloud if not in cache
+    try {
+      const response = await db.getCardById(cardId);
+      if (response && response.card) {
+        // Cache it locally
+        await dbRequest(STORE_CARDS, 'readwrite', store => store.put(response.card));
+        return response.card;
+      }
+    } catch (error) {
+      console.error('Failed to fetch card from cloud:', error);
+    }
+
+    return null;
+  },
+
+  /**
    * Toggle card visibility (public/private)
    */
   toggleCardVisibility: async (cardId: string, isPublic: boolean): Promise<void> => {
@@ -149,6 +179,8 @@ async function syncUserToCloud(user: User) {
       clerkId: user.clerkId,
       name: user.name,
       selfieUrl: user.selfie,
+      strengths: user.strengths,
+      story: user.story,
     });
   } catch (error) {
     console.error('User save failed:', error);

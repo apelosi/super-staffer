@@ -18,6 +18,8 @@ export interface User {
   clerkId: string;           // Clerk user ID
   name: string;
   selfie: string;            // Cloud storage URL (Cloudinary)
+  strengths?: string[];      // Array of up to 5 character strengths
+  story?: string;            // Origin story (max 144 characters)
 }
 
 export interface CardData {

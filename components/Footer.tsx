@@ -8,13 +8,18 @@ const Footer: React.FC = () => {
                 <div className="flex flex-col md:flex-row justify-between items-center gap-6">
 
                     {/* Brand Left */}
-                    <div className="flex items-center gap-3">
-                        <div className="w-8 h-8">
-                            <div dangerouslySetInnerHTML={{ __html: VIBEZ_LOGO_SVG }} />
+                    <div className="flex flex-col items-center md:items-start gap-1">
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8">
+                                <div dangerouslySetInnerHTML={{ __html: VIBEZ_LOGO_SVG }} />
+                            </div>
+                            <h3 className="font-action text-xl text-white tracking-wide">
+                                SUPER <span className="text-transparent bg-clip-text bg-gradient-to-r from-vibez-blue to-vibez-purple">STAFFER</span>
+                            </h3>
                         </div>
-                        <h3 className="font-action text-xl text-white tracking-wide">
-                            SUPER <span className="text-transparent bg-clip-text bg-gradient-to-r from-vibez-blue to-vibez-purple">STAFFER</span>
-                        </h3>
+                        <div className="text-sm text-slate-500 md:ml-11">
+                            Made with 🫰 in 🇸🇬
+                        </div>
                     </div>
 
                     {/* Copyright Center */}
@@ -22,9 +27,14 @@ const Footer: React.FC = () => {
                         &copy; {new Date().getFullYear()} <a href="https://vibez.ventures" target="_blank" rel="noopener noreferrer" className="hover:text-vibez-blue transition-colors underline decoration-slate-500 hover:decoration-vibez-blue">Vibez Ventures</a>. All rights reserved.
                     </div>
 
-                    {/* Made With Right */}
-                    <div className="flex items-center gap-2 text-sm text-slate-500">
-                        <span>Made with 🫰 in 🇸🇬</span>
+                    {/* Contact Link Right */}
+                    <div className="text-sm">
+                        <a
+                            href="https://vibez.ventures/#contact"
+                            className="text-slate-500 hover:text-vibez-blue transition-colors font-action tracking-wide"
+                        >
+                            CONTACT
+                        </a>
                     </div>
                 </div>
             </div>

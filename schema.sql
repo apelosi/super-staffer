@@ -6,6 +6,8 @@ CREATE TABLE IF NOT EXISTS users (
   clerk_id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   selfie_url TEXT NOT NULL,
+  strengths TEXT[] DEFAULT '{}',
+  story VARCHAR(144) DEFAULT '',
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );

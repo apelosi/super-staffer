@@ -26,7 +26,7 @@ export const db = {
   /**
    * Save or update user profile
    */
-  saveUser: async (user: { clerkId: string; name: string; selfieUrl: string }): Promise<{ success: boolean }> => {
+  saveUser: async (user: { clerkId: string; name: string; selfieUrl: string; strengths?: string[]; story?: string }): Promise<{ success: boolean }> => {
     const response = await fetch('/.netlify/functions/db-save-user', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -96,6 +96,23 @@ export const db = {
     const result = await response.json();
     console.log('netlify-db.deleteCard: Success response:', result);
     return result;
+  },
+
+  /**
+   * Get a single card by ID (for public viewing)
+   */
+  getCardById: async (cardId: string): Promise<{ card: CardData | null }> => {
+    const response = await fetch('/.netlify/functions/db-get-card-by-id', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cardId }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to get card');
+    }
+
+    return response.json();
   },
 
   /**

@@ -12,9 +12,9 @@ export default async (req: Request) => {
 
   try {
     const body = await req.json();
-    const { clerkId, name, selfieUrl } = body;
+    const { clerkId, name, selfieUrl, strengths, story } = body;
 
-    console.log('Saving user:', { clerkId, name, selfieLength: selfieUrl?.length });
+    console.log('Saving user:', { clerkId, name, selfieLength: selfieUrl?.length, strengths, storyLength: story?.length });
 
     if (!clerkId || !name || !selfieUrl) {
       console.error('Missing fields:', { hasClerkId: !!clerkId, hasName: !!name, hasSelfie: !!selfieUrl });
@@ -26,12 +26,14 @@ export default async (req: Request) => {
 
     // Upsert: Insert or update on conflict
     await sql`
-      INSERT INTO users (clerk_id, name, selfie_url, updated_at)
-      VALUES (${clerkId}, ${name}, ${selfieUrl}, NOW())
+      INSERT INTO users (clerk_id, name, selfie_url, strengths, story, updated_at)
+      VALUES (${clerkId}, ${name}, ${selfieUrl}, ${strengths || []}, ${story || ''}, NOW())
       ON CONFLICT (clerk_id)
       DO UPDATE SET
         name = ${name},
         selfie_url = ${selfieUrl},
+        strengths = ${strengths || []},
+        story = ${story || ''},
         updated_at = NOW()
     `;
 

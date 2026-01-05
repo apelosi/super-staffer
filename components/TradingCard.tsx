@@ -5,9 +5,9 @@ import { VIBEZ_LOGO_SVG } from '../constants';
 
 interface TradingCardProps {
   card: CardData;
-  user: User;
+  user?: User;
   onDelete?: (id: string) => void;
-  variant?: 'preview' | 'full';
+  variant?: 'preview' | 'full' | 'dashboard';
 }
 
 const TradingCard: React.FC<TradingCardProps> = ({ card, user, onDelete, variant = 'full' }) => {
@@ -28,15 +28,11 @@ const TradingCard: React.FC<TradingCardProps> = ({ card, user, onDelete, variant
       canvas.width = width;
       canvas.height = height;
 
-      // 1. Fill white background with rounded corners
+      // 1. Fill white background (no border, sharp corners)
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, width, height);
 
-      // Border configuration - wider border like Space Opera card
-      const borderRadius = 20;
-      const borderWidth = 20; // Wider white border
-
-      // 2. Load and Draw Main Image first (will bleed over full canvas)
+      // 2. Load and Draw Main Image (covers full canvas, no border)
       const img = new Image();
       img.crossOrigin = "anonymous";
 
@@ -67,23 +63,7 @@ const TradingCard: React.FC<TradingCardProps> = ({ card, user, onDelete, variant
 
       ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
 
-      // 3. Draw white rounded rectangle border OVER the image
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = borderWidth;
-      ctx.beginPath();
-      ctx.moveTo(borderRadius, borderWidth / 2);
-      ctx.lineTo(width - borderRadius, borderWidth / 2);
-      ctx.quadraticCurveTo(width - borderWidth / 2, borderWidth / 2, width - borderWidth / 2, borderRadius);
-      ctx.lineTo(width - borderWidth / 2, height - borderRadius);
-      ctx.quadraticCurveTo(width - borderWidth / 2, height - borderWidth / 2, width - borderRadius, height - borderWidth / 2);
-      ctx.lineTo(borderRadius, height - borderWidth / 2);
-      ctx.quadraticCurveTo(borderWidth / 2, height - borderWidth / 2, borderWidth / 2, height - borderRadius);
-      ctx.lineTo(borderWidth / 2, borderRadius);
-      ctx.quadraticCurveTo(borderWidth / 2, borderWidth / 2, borderRadius, borderWidth / 2);
-      ctx.closePath();
-      ctx.stroke();
-
-      // 4. Text Overlays
+      // 3. Text Overlays
 
       // Top Left: Name (same font size as SUPER STAFFERS)
       ctx.font = 'italic 900 36px "Arial", sans-serif';
@@ -91,8 +71,9 @@ const TradingCard: React.FC<TradingCardProps> = ({ card, user, onDelete, variant
       ctx.shadowColor = 'black';
       ctx.shadowBlur = 10;
       ctx.lineWidth = 3;
-      ctx.strokeText(user.name.toUpperCase(), 40, 65);
-      ctx.fillText(user.name.toUpperCase(), 40, 65);
+      const userName = user?.name || card.userName;
+      ctx.strokeText(userName.toUpperCase(), 40, 65);
+      ctx.fillText(userName.toUpperCase(), 40, 65);
 
       // Top Right: SUPER STAFFERS
       ctx.font = 'italic 900 36px "Arial", sans-serif';
@@ -108,7 +89,7 @@ const TradingCard: React.FC<TradingCardProps> = ({ card, user, onDelete, variant
       ctx.strokeText(card.theme.toUpperCase(), 40, height - 50);
       ctx.fillText(card.theme.toUpperCase(), 40, height - 50);
 
-      // 5. Draw Logo (Bottom Right)
+      // 4. Draw Logo (Bottom Right)
       const logoSize = 60; // Slightly larger for better visibility
       const lx = width - 40 - logoSize;
       const ly = height - 40 - logoSize;
@@ -141,7 +122,7 @@ const TradingCard: React.FC<TradingCardProps> = ({ card, user, onDelete, variant
       // Download
       const dataUrl = canvas.toDataURL('image/png');
       const link = document.createElement('a');
-      link.download = `SuperStaffer-${user.name}-${card.theme}.png`;
+      link.download = `SuperStaffer-${userName}-${card.theme}.png`;
       link.href = dataUrl;
       link.click();
 
@@ -153,22 +134,21 @@ const TradingCard: React.FC<TradingCardProps> = ({ card, user, onDelete, variant
     }
   };
 
+  const displayName = user?.name || card.userName;
+
   return (
     <div className="relative group w-full max-w-sm">
-      {/* Card Visuals - White border with rounded corners, image bleeds to edges */}
+      {/* Card Visuals - Sharp corners, no border, image bleeds to edges */}
       <div
         ref={cardRef}
-        className="relative aspect-[2.5/3.5] bg-white rounded-xl shadow-2xl transition-transform duration-300 transform group-hover:scale-[1.02] overflow-hidden"
+        className="relative aspect-[2.5/3.5] bg-white shadow-2xl transition-transform duration-300 transform group-hover:scale-[1.02] overflow-hidden"
       >
         {/* Main Image - covers entire card */}
         <img
           src={card.imageUrl}
-          alt={`${user.name} as ${card.theme}`}
+          alt={`${displayName} as ${card.theme}`}
           className="absolute inset-0 w-full h-full object-cover"
         />
-
-        {/* White border overlay on top of image */}
-        <div className="absolute inset-0 pointer-events-none border-[10px] border-white rounded-xl"></div>
 
         {/* Overlays - mimicking the canvas drawing for preview */}
         <div className="absolute inset-0 pointer-events-none p-4 flex flex-col justify-between">
@@ -177,7 +157,7 @@ const TradingCard: React.FC<TradingCardProps> = ({ card, user, onDelete, variant
           <div className="flex justify-between items-start">
             <h2 className="font-action italic text-lg text-white uppercase tracking-wider drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]"
               style={{ WebkitTextStroke: '1px black' }}>
-              {user.name}
+              {displayName}
             </h2>
             <span className="font-action italic text-yellow-400 text-lg drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]"
               style={{ WebkitTextStroke: '1px black' }}>
@@ -202,25 +182,27 @@ const TradingCard: React.FC<TradingCardProps> = ({ card, user, onDelete, variant
         <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
       </div>
 
-      {/* Actions */}
-      <div className="mt-4 flex justify-center gap-4">
-        <button
-          onClick={handleDownload}
-          disabled={isDownloading}
-          className="flex items-center gap-2 px-4 py-2 bg-vibez-blue hover:bg-cyan-600 text-white rounded-full font-bold shadow-lg transition-colors"
-        >
-          {isDownloading ? <Loader2 className="animate-spin w-4 h-4" /> : <Download className="w-4 h-4" />}
-          Download
-        </button>
-        {onDelete && (
+      {/* Actions - only show for 'full' variant */}
+      {variant === 'full' && (
+        <div className="mt-4 flex justify-center gap-4">
           <button
-            onClick={() => onDelete(card.id)}
-            className="flex items-center gap-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/40 text-red-300 rounded-full font-bold transition-colors"
+            onClick={handleDownload}
+            disabled={isDownloading}
+            className="flex items-center gap-2 px-4 py-2 bg-vibez-blue hover:bg-cyan-600 text-white rounded-full font-bold shadow-lg transition-colors"
           >
-            <Trash2 className="w-4 h-4" />
+            {isDownloading ? <Loader2 className="animate-spin w-4 h-4" /> : <Download className="w-4 h-4" />}
+            Download
           </button>
-        )}
-      </div>
+          {onDelete && (
+            <button
+              onClick={() => onDelete(card.id)}
+              className="flex items-center gap-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/40 text-red-300 rounded-full font-bold transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 };

@@ -1,7 +1,7 @@
 import { neon } from '@neondatabase/serverless';
 
 /**
- * Netlify Function: Get user profile from database
+ * Netlify Function: Get a single card by ID (for public viewing)
  */
 export default async (req: Request) => {
   if (req.method !== 'POST') {
@@ -11,36 +11,41 @@ export default async (req: Request) => {
   const sql = neon(process.env.NETLIFY_DATABASE_URL!);
 
   try {
-    const { clerkId } = await req.json();
+    const { cardId } = await req.json();
 
-    if (!clerkId) {
+    if (!cardId) {
       return new Response(
-        JSON.stringify({ error: 'Missing clerkId' }),
+        JSON.stringify({ error: 'Missing cardId' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
     const rows = await sql`
-      SELECT * FROM users WHERE clerk_id = ${clerkId} LIMIT 1
+      SELECT * FROM cards
+      WHERE id = ${cardId}
+      LIMIT 1
     `;
 
     if (rows.length === 0) {
       return new Response(
-        JSON.stringify({ user: null }),
+        JSON.stringify({ card: null }),
         { headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    const user = {
-      clerkId: rows[0].clerk_id,
-      name: rows[0].name,
-      selfie: rows[0].selfie_url,
-      strengths: rows[0].strengths || [],
-      story: rows[0].story || '',
+    const row = rows[0];
+    const card = {
+      id: row.id,
+      timestamp: Number(row.timestamp),
+      imageUrl: row.image_url,
+      theme: row.theme,
+      alignment: row.alignment,
+      userName: row.user_name,
+      isPublic: row.is_public,
     };
 
     return new Response(
-      JSON.stringify({ user }),
+      JSON.stringify({ card }),
       { headers: { 'Content-Type': 'application/json' } }
     );
   } catch (error: any) {

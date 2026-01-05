@@ -1,23 +1,85 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth, useUser } from '@clerk/clerk-react';
+import { Routes, Route, useNavigate, useParams } from 'react-router-dom';
 import { storage } from './services/storage';
 import { User, CardData, ThemeName, Alignment } from './types';
 import ParallaxHero from './components/ParallaxHero';
 import Onboarding from './components/Onboarding';
 import Dashboard from './components/Dashboard';
 import CardCreator from './components/CardCreator';
+import SingleCardView from './components/SingleCardView';
 import LoadingScreen from './components/LoadingScreen';
 
-type View = 'home' | 'onboarding' | 'dashboard' | 'creator';
+type View = 'home' | 'onboarding' | 'dashboard' | 'creator' | 'single-card';
+
+const PublicCardView: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const [card, setCard] = useState<CardData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadCard = async () => {
+      if (!id) return;
+
+      try {
+        const loadedCard = await storage.getCardById(id);
+        if (loadedCard && loadedCard.isPublic) {
+          setCard(loadedCard);
+        }
+      } catch (error) {
+        console.error('Failed to load card:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCard();
+  }, [id]);
+
+  if (loading) {
+    return <LoadingScreen />;
+  }
+
+  if (!card) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center p-6">
+        <div className="text-center">
+          <h1 className="font-action text-4xl text-gray-900 mb-4">CARD NOT FOUND</h1>
+          <p className="font-comic text-xl text-gray-600 mb-8">
+            This card is either private or doesn't exist.
+          </p>
+          <a
+            href="/"
+            className="inline-block bg-gradient-to-r from-vibez-blue to-vibez-purple text-white font-action text-xl px-8 py-4 rounded-full hover:shadow-xl transition-all"
+          >
+            GO HOME
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <SingleCardView
+      card={card}
+      onBack={() => window.location.href = '/'}
+      onDelete={() => {}}
+      onToggleVisibility={() => {}}
+      isOwner={false}
+    />
+  );
+};
 
 const App: React.FC = () => {
   const { isLoaded: authLoaded, isSignedIn } = useAuth();
   const { user: clerkUser } = useUser();
+  const navigate = useNavigate();
 
   const [view, setView] = useState<View | null>(null); // null = initializing
   const [localUser, setLocalUser] = useState<User | null>(null);
   const [cards, setCards] = useState<CardData[]>([]);
   const [hasProfile, setHasProfile] = useState(false);
+  const [selectedCard, setSelectedCard] = useState<CardData | null>(null);
 
   // Check Clerk profile and load user data - RUNS ONCE when auth loads
   useEffect(() => {
@@ -94,7 +156,8 @@ const App: React.FC = () => {
     };
     await storage.saveCard(newCard, clerkUser.id);
     setCards(prev => [...prev, newCard]);
-    setView('dashboard');
+    setSelectedCard(newCard);
+    setView('single-card');
   };
 
   const handleDeleteCard = async (id: string) => {
@@ -122,44 +185,91 @@ const App: React.FC = () => {
     }
   };
 
+  const handleCardSelect = (card: CardData) => {
+    setSelectedCard(card);
+    setView('single-card');
+  };
+
+  const handleToggleVisibility = async (cardId: string) => {
+    const card = cards.find(c => c.id === cardId);
+    if (!card) return;
+
+    const newIsPublic = !card.isPublic;
+
+    // Optimistic update
+    setCards(prev => prev.map(c => c.id === cardId ? { ...c, isPublic: newIsPublic } : c));
+    if (selectedCard && selectedCard.id === cardId) {
+      setSelectedCard({ ...selectedCard, isPublic: newIsPublic });
+    }
+
+    try {
+      await storage.toggleCardVisibility(cardId, newIsPublic);
+    } catch (error) {
+      console.error('Failed to toggle visibility:', error);
+      // Revert on error
+      setCards(prev => prev.map(c => c.id === cardId ? { ...c, isPublic: !newIsPublic } : c));
+      if (selectedCard && selectedCard.id === cardId) {
+        setSelectedCard({ ...selectedCard, isPublic: !newIsPublic });
+      }
+    }
+  };
+
   // View Routing
   // Show loading ONLY while initializing (view is null)
   if (view === null) {
     return <LoadingScreen />;
   }
 
-  if (view === 'home') {
-    return <ParallaxHero onStart={handleStart} />;
-  }
+  return (
+    <Routes>
+      {/* Public card view route */}
+      <Route path="/card/:id" element={<PublicCardView />} />
 
-  if (view === 'onboarding') {
-    return <Onboarding onComplete={handleOnboardingComplete} onCancel={() => setView('home')} />;
-  }
+      {/* Main app routes */}
+      <Route path="*" element={
+        <>
+          {view === 'home' && <ParallaxHero onStart={handleStart} />}
 
-  if (view === 'creator' && localUser) {
-    return (
-      <CardCreator
-        user={localUser}
-        onCancel={() => setView('dashboard')}
-        onSuccess={handleCardCreated}
-      />
-    );
-  }
+          {view === 'onboarding' && (
+            <Onboarding
+              onComplete={handleOnboardingComplete}
+              onCancel={() => setView('home')}
+            />
+          )}
 
-  if (view === 'dashboard' && localUser) {
-    return (
-      <Dashboard
-        user={localUser}
-        cards={cards}
-        onCreateClick={() => setView('creator')}
-        onLogout={handleLogout}
-        onDeleteCard={handleDeleteCard}
-        onUpdateUser={handleUpdateUser}
-      />
-    );
-  }
+          {view === 'creator' && localUser && (
+            <CardCreator
+              user={localUser}
+              onCancel={() => setView('dashboard')}
+              onSuccess={handleCardCreated}
+            />
+          )}
 
-  return <div className="min-h-screen bg-white" />;
+          {view === 'dashboard' && localUser && (
+            <Dashboard
+              user={localUser}
+              cards={cards}
+              onCreateClick={() => setView('creator')}
+              onLogout={handleLogout}
+              onCardSelect={handleCardSelect}
+              onUpdateUser={handleUpdateUser}
+            />
+          )}
+
+          {view === 'single-card' && selectedCard && localUser && (
+            <SingleCardView
+              card={selectedCard}
+              user={localUser}
+              onBack={() => setView('dashboard')}
+              onDelete={handleDeleteCard}
+              onToggleVisibility={handleToggleVisibility}
+              isOwner={true}
+            />
+          )}
+        </>
+      } />
+    </Routes>
+  );
 };
 
 export default App;

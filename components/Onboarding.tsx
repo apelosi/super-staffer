@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useUser } from '@clerk/clerk-react';
 import CameraCapture from './CameraCapture';
+import SuperPowersInput from './SuperPowersInput';
 import { User } from '../types';
-import { ArrowRight, Loader2 } from 'lucide-react';
+import { ArrowRight, Loader2, ArrowLeft } from 'lucide-react';
 
 interface OnboardingProps {
   onComplete: (user: User) => void;
@@ -11,9 +12,11 @@ interface OnboardingProps {
 
 const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onCancel }) => {
   const { user: clerkUser } = useUser();
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [name, setName] = useState('');
   const [selfie, setSelfie] = useState('');
+  const [strengths, setStrengths] = useState<string[]>([]);
+  const [story, setStory] = useState('');
   const [isUploading, setIsUploading] = useState(false);
 
   const handleNameSubmit = (e: React.FormEvent) => {
@@ -25,16 +28,30 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onCancel }) => {
     setSelfie(base64);
   };
 
+  const handleSelfieConfirm = () => {
+    setStep(3);
+  };
+
+  const handleSkipStrengths = () => {
+    setStep(4);
+  };
+
+  const handleSkipStory = () => {
+    handleFinish();
+  };
+
   const handleFinish = async () => {
     if (!name || !selfie || !clerkUser) return;
 
     setIsUploading(true);
     try {
-      // Create user object with Clerk ID and base64 selfie
+      // Create user object with Clerk ID, selfie, strengths, and story
       const user: User = {
         clerkId: clerkUser.id,
         name,
         selfie: selfie, // Store base64 directly
+        strengths: strengths.length > 0 ? strengths : undefined,
+        story: story.trim() || undefined,
       };
 
       onComplete(user);
@@ -60,7 +77,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onCancel }) => {
         <div className="w-full h-2 bg-gray-200 rounded-full mb-16 overflow-hidden shadow-inner">
           <div
             className="h-full bg-gradient-to-r from-vibez-blue to-vibez-purple transition-all duration-500"
-            style={{ width: `${(step / 2) * 100}%` }}
+            style={{ width: `${(step / 4) * 100}%` }}
           />
         </div>
 
@@ -117,23 +134,15 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onCancel }) => {
 
                 <div className="flex flex-col w-full max-w-md gap-5">
                   <button
-                    onClick={handleFinish}
-                    disabled={isUploading}
-                    className="w-full bg-gradient-to-r from-vibez-blue to-vibez-purple text-white font-action text-2xl py-7 rounded-full shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    onClick={handleSelfieConfirm}
+                    className="w-full bg-gradient-to-r from-vibez-blue to-vibez-purple text-white font-action text-2xl py-7 rounded-full shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
                   >
-                    {isUploading ? (
-                      <>
-                        <Loader2 className="w-6 h-6 animate-spin" />
-                        SAVING...
-                      </>
-                    ) : (
-                      'CONFIRM IDENTITY'
-                    )}
+                    CONFIRM IDENTITY
+                    <ArrowRight className="w-7 h-7" />
                   </button>
                   <button
                     onClick={() => setSelfie('')}
-                    disabled={isUploading}
-                    className="w-full py-5 text-gray-500 font-bold uppercase tracking-widest hover:text-gray-700 transition-colors disabled:opacity-50"
+                    className="w-full py-5 text-gray-500 font-bold uppercase tracking-widest hover:text-gray-700 transition-colors"
                   >
                     RETAKE SCAN
                   </button>
@@ -149,6 +158,122 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onCancel }) => {
                 GO BACK TO NAME
               </button>
             )}
+          </div>
+        )}
+
+        {step === 3 && (
+          <div className="flex-1 flex flex-col animate-in fade-in slide-in-from-bottom-8 duration-500">
+            <h2 className="text-5xl md:text-7xl font-action mb-6 bg-clip-text text-transparent bg-gradient-to-r from-vibez-blue to-vibez-purple leading-tight">
+              SUPER <br />POWERS
+            </h2>
+            <p className="text-gray-600 text-xl mb-12 font-comic tracking-wide">
+              Tell us the top Super Powers that make you an incredible Super Staffer. You can skip for now or specify up to 5.
+            </p>
+
+            <div className="flex-1 overflow-y-auto mb-8">
+              <SuperPowersInput
+                strengths={strengths}
+                onStrengthsChange={setStrengths}
+                maxStrengths={5}
+              />
+            </div>
+
+            <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+              <button
+                onClick={() => setStep(2)}
+                className="flex items-center gap-2 text-gray-500 font-bold uppercase tracking-widest text-sm hover:text-gray-700 transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                BACK TO SELFIE
+              </button>
+
+              <div className="flex gap-4">
+                <button
+                  onClick={handleSkipStrengths}
+                  disabled={isUploading}
+                  className="px-8 py-4 text-gray-600 font-action text-lg uppercase tracking-wider hover:text-gray-800 transition-colors disabled:opacity-50"
+                >
+                  SKIP FOR NOW
+                </button>
+                <button
+                  onClick={() => setStep(4)}
+                  disabled={isUploading}
+                  className="bg-gradient-to-r from-vibez-blue to-vibez-purple text-white font-action text-xl px-12 py-5 rounded-full shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  CONFIRM
+                  <ArrowRight className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {step === 4 && (
+          <div className="flex-1 flex flex-col animate-in fade-in slide-in-from-bottom-8 duration-500">
+            <h2 className="text-5xl md:text-7xl font-action mb-6 bg-clip-text text-transparent bg-gradient-to-r from-vibez-blue to-vibez-purple leading-tight">
+              ORIGIN <br />STORY
+            </h2>
+            <p className="text-gray-600 text-xl mb-8 font-comic tracking-wide">
+              How did you come to join forces with your colleagues and what is your role?
+            </p>
+
+            <div className="flex-1 mb-8">
+              <textarea
+                value={story}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value.length <= 144) {
+                    setStory(value);
+                  }
+                }}
+                placeholder="Tell your origin story..."
+                className="w-full h-48 p-4 bg-white border-2 border-gray-200 rounded-xl focus:border-vibez-blue focus:outline-none resize-none text-gray-700 font-comic text-lg transition-colors"
+                maxLength={144}
+              />
+              <div className="flex justify-between items-center mt-2">
+                <span className="text-sm text-gray-500">Maximum 144 characters</span>
+                <span className={`font-action text-sm ${story.length >= 144 ? 'text-vibez-purple' : 'text-gray-500'}`}>
+                  {story.length} / 144
+                </span>
+              </div>
+            </div>
+
+            <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+              <button
+                onClick={() => setStep(3)}
+                className="flex items-center gap-2 text-gray-500 font-bold uppercase tracking-widest text-sm hover:text-gray-700 transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                BACK TO SUPER POWERS
+              </button>
+
+              <div className="flex gap-4">
+                <button
+                  onClick={handleSkipStory}
+                  disabled={isUploading}
+                  className="px-8 py-4 text-gray-600 font-action text-lg uppercase tracking-wider hover:text-gray-800 transition-colors disabled:opacity-50"
+                >
+                  SKIP FOR NOW
+                </button>
+                <button
+                  onClick={handleFinish}
+                  disabled={isUploading}
+                  className="bg-gradient-to-r from-vibez-blue to-vibez-purple text-white font-action text-xl px-12 py-5 rounded-full shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {isUploading ? (
+                    <>
+                      <Loader2 className="w-6 h-6 animate-spin" />
+                      SAVING...
+                    </>
+                  ) : (
+                    <>
+                      CONFIRM
+                      <ArrowRight className="w-6 h-6" />
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
