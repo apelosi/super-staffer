@@ -391,7 +391,7 @@ const ParallaxHero: React.FC<ParallaxHeroProps> = ({ onStart }) => {
               </motion.div>
 
               {/* Character Strengths Wallpaper */}
-              <div className="relative min-h-[250px] flex flex-wrap items-center justify-center gap-3 p-6">
+              <div className="relative grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 p-6 max-w-6xl mx-auto">
                 {CHARACTER_STRENGTHS.map((strength, index) => {
                   // More varied rotation angles for less orderly look
                   const rotations = [
@@ -409,7 +409,7 @@ const ParallaxHero: React.FC<ParallaxHeroProps> = ({ onStart }) => {
                       viewport={{ once: true }}
                       transition={{ duration: 0.5, delay: index * 0.05 }}
                       whileHover={{ scale: 1.15, rotate: 0, zIndex: 10 }}
-                      className="inline-flex items-center gap-2 bg-gradient-to-r from-vibez-blue to-vibez-purple text-white px-4 py-2 rounded-full font-action text-xs md:text-sm shadow-lg cursor-default"
+                      className="flex items-center justify-center gap-2 bg-gradient-to-r from-vibez-blue to-vibez-purple text-white px-4 py-2 rounded-full font-action text-xs md:text-sm shadow-lg cursor-default"
                       style={{
                         transform: `rotate(${rotation}deg)`,
                       }}
@@ -480,60 +480,122 @@ const ParallaxHero: React.FC<ParallaxHeroProps> = ({ onStart }) => {
                   const isHovered = hoveredTheme === theme.name;
 
                   return (
-                    <motion.div
-                      key={theme.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, delay: index * 0.05 }}
-                      onMouseEnter={() => setHoveredTheme(theme.name)}
-                      onMouseLeave={() => setHoveredTheme(null)}
-                      className={`group relative bg-white rounded-3xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden ${
-                        isHovered ? 'border-2' : 'border border-gray-200'
-                      }`}
-                      style={isHovered ? { borderColor: theme.colors.from } : {}}
-                    >
-                      {/* Content wrapper - fixed height with space for button */}
-                      <div className="flex flex-col items-center text-center h-full">
-                        {/* Icon with gradient background circle */}
-                        <div
-                          className="w-24 h-24 rounded-2xl mb-4 flex items-center justify-center transition-all duration-300"
-                          style={{
-                            background: `linear-gradient(135deg, ${theme.colors.from}15, ${theme.colors.to}15)`
-                          }}
-                        >
-                          {(() => {
-                            const IconComponent = iconMap[theme.icon];
-                            return IconComponent ? (
-                              <IconComponent
-                                className="transition-all duration-300"
-                                size={48}
-                                strokeWidth={2.5}
+                    <React.Fragment key={theme.id}>
+                      <SignedOut>
+                        <SignUpButton mode="modal">
+                          <motion.button
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.5, delay: index * 0.05 }}
+                            onClick={() => {
+                              localStorage.setItem('selectedTheme', theme.name);
+                            }}
+                            onMouseEnter={() => setHoveredTheme(theme.name)}
+                            onMouseLeave={() => setHoveredTheme(null)}
+                            className={`group relative bg-white rounded-3xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden ${
+                              isHovered ? 'border-2' : 'border border-gray-200'
+                            }`}
+                            style={isHovered ? { borderColor: theme.colors.from } : {}}
+                          >
+                            {/* Content wrapper - fixed height with space for button */}
+                            <div className="flex flex-col items-center text-center h-full">
+                              {/* Icon with gradient background circle */}
+                              <div
+                                className="w-24 h-24 rounded-2xl mb-4 flex items-center justify-center transition-all duration-300"
                                 style={{
-                                  color: theme.colors.from
+                                  background: `linear-gradient(135deg, ${theme.colors.from}15, ${theme.colors.to}15)`
                                 }}
-                              />
-                            ) : null;
-                          })()}
-                        </div>
+                              >
+                                {(() => {
+                                  const IconComponent = iconMap[theme.icon];
+                                  return IconComponent ? (
+                                    <IconComponent
+                                      className="transition-all duration-300"
+                                      size={48}
+                                      strokeWidth={2.5}
+                                      style={{
+                                        color: theme.colors.from
+                                      }}
+                                    />
+                                  ) : null;
+                                })()}
+                              </div>
 
-                        <h3 className="font-action text-sm uppercase mb-2 text-gray-900 transition-colors duration-300">
-                          {theme.name}
-                        </h3>
-                        <p className="text-xs leading-relaxed text-gray-600 mb-4 flex-1">
-                          {theme.description}
-                        </p>
+                              <h3 className="font-action text-sm uppercase mb-2 text-gray-900 transition-colors duration-300">
+                                {theme.name}
+                              </h3>
+                              <p className="text-xs leading-relaxed text-gray-600 mb-4 flex-1">
+                                {theme.description}
+                              </p>
 
-                        {/* Button area - always present, fades in on hover */}
-                        <div className={`w-full transition-opacity duration-300 ${
-                          isHovered ? 'opacity-100' : 'opacity-0'
-                        }`}>
-                          <SignedOut>
-                            <SignUpButton mode="modal">
-                              <button
-                                onClick={(e: React.MouseEvent) => {
-                                  e.stopPropagation();
-                                  localStorage.setItem('selectedTheme', theme.name);
-                                }}
+                              {/* Button area - always present, fades in on hover */}
+                              <div className={`w-full transition-opacity duration-300 ${
+                                isHovered ? 'opacity-100' : 'opacity-0'
+                              }`}>
+                                <div
+                                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 font-action text-xs font-bold uppercase tracking-wide transition-all duration-300 rounded-lg"
+                                  style={{
+                                    backgroundColor: isHovered ? theme.colors.from : 'transparent',
+                                    color: 'white'
+                                  }}
+                                >
+                                  <span>CREATE</span>
+                                  <ArrowRight className="w-3.5 h-3.5" strokeWidth={3} />
+                                </div>
+                              </div>
+                            </div>
+                          </motion.button>
+                        </SignUpButton>
+                      </SignedOut>
+                      <SignedIn>
+                        <motion.button
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.5, delay: index * 0.05 }}
+                          onClick={() => handleCreateWithTheme(theme.name)}
+                          onMouseEnter={() => setHoveredTheme(theme.name)}
+                          onMouseLeave={() => setHoveredTheme(null)}
+                          className={`group relative bg-white rounded-3xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden ${
+                            isHovered ? 'border-2' : 'border border-gray-200'
+                          }`}
+                          style={isHovered ? { borderColor: theme.colors.from } : {}}
+                        >
+                          {/* Content wrapper - fixed height with space for button */}
+                          <div className="flex flex-col items-center text-center h-full">
+                            {/* Icon with gradient background circle */}
+                            <div
+                              className="w-24 h-24 rounded-2xl mb-4 flex items-center justify-center transition-all duration-300"
+                              style={{
+                                background: `linear-gradient(135deg, ${theme.colors.from}15, ${theme.colors.to}15)`
+                              }}
+                            >
+                              {(() => {
+                                const IconComponent = iconMap[theme.icon];
+                                return IconComponent ? (
+                                  <IconComponent
+                                    className="transition-all duration-300"
+                                    size={48}
+                                    strokeWidth={2.5}
+                                    style={{
+                                      color: theme.colors.from
+                                    }}
+                                  />
+                                ) : null;
+                              })()}
+                            </div>
+
+                            <h3 className="font-action text-sm uppercase mb-2 text-gray-900 transition-colors duration-300">
+                              {theme.name}
+                            </h3>
+                            <p className="text-xs leading-relaxed text-gray-600 mb-4 flex-1">
+                              {theme.description}
+                            </p>
+
+                            {/* Button area - always present, fades in on hover */}
+                            <div className={`w-full transition-opacity duration-300 ${
+                              isHovered ? 'opacity-100' : 'opacity-0'
+                            }`}>
+                              <div
                                 className="w-full flex items-center justify-center gap-2 px-4 py-2.5 font-action text-xs font-bold uppercase tracking-wide transition-all duration-300 rounded-lg"
                                 style={{
                                   backgroundColor: isHovered ? theme.colors.from : 'transparent',
@@ -542,28 +604,12 @@ const ParallaxHero: React.FC<ParallaxHeroProps> = ({ onStart }) => {
                               >
                                 <span>CREATE</span>
                                 <ArrowRight className="w-3.5 h-3.5" strokeWidth={3} />
-                              </button>
-                            </SignUpButton>
-                          </SignedOut>
-                          <SignedIn>
-                            <button
-                              onClick={(e: React.MouseEvent) => {
-                                e.stopPropagation();
-                                handleCreateWithTheme(theme.name);
-                              }}
-                              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 font-action text-xs font-bold uppercase tracking-wide transition-all duration-300 rounded-lg"
-                              style={{
-                                backgroundColor: isHovered ? theme.colors.from : 'transparent',
-                                color: 'white'
-                              }}
-                            >
-                              <span>CREATE</span>
-                              <ArrowRight className="w-3.5 h-3.5" strokeWidth={3} />
-                            </button>
-                          </SignedIn>
-                        </div>
-                      </div>
-                    </motion.div>
+                              </div>
+                            </div>
+                          </div>
+                        </motion.button>
+                      </SignedIn>
+                    </React.Fragment>
                   );
                 })}
               </div>

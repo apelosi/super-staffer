@@ -10,3 +10,10 @@
 
 [functions]
   directory = "netlify/functions"
+
+# SPA redirect rule - serve index.html for all routes
+# This allows React Router to handle client-side routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

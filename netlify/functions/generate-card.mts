@@ -46,6 +46,14 @@ export default async (req: Request) => {
       - Do NOT include text on the image.
       - Focus on the character design matching the theme: ${theme}.
 
+      CRITICAL - NO BORDERS OR FRAMES:
+      - DO NOT add any white border, frame, or edge around the entire image.
+      - DO NOT apply any border effect or outline to the outer edges of the image.
+      - The image should extend fully to all four edges without any border whatsoever.
+      - The artwork should fill the entire canvas edge-to-edge.
+      - Do not create a "card-like" border or frame effect on the outer perimeter.
+      - The only frame should be the rectangular window behind the character showing Marina Bay Sands - NOT around the entire image.
+
       Ensure the face resembles the input photo but stylized to fit the superhero theme.
     `;
 

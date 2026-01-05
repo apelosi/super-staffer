@@ -3,7 +3,7 @@ import { useUser } from '@clerk/clerk-react';
 import CameraCapture from './CameraCapture';
 import SuperPowersInput from './SuperPowersInput';
 import { User } from '../types';
-import { ArrowRight, Loader2 } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Loader2 } from 'lucide-react';
 
 interface OnboardingProps {
   onComplete: (user: User) => void;
@@ -83,8 +83,8 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onCancel }) => {
 
         {step === 1 && (
           <form onSubmit={handleNameSubmit} className="flex-1 flex flex-col animate-in fade-in slide-in-from-bottom-8 duration-500">
-            <h2 className="text-5xl md:text-7xl font-action mb-6 bg-clip-text text-transparent bg-gradient-to-r from-vibez-blue to-vibez-purple leading-tight">
-              WHO IS THIS <br />SUPER <br />STAFFER?
+            <h2 className="text-3xl md:text-5xl font-action mb-6 bg-clip-text text-transparent bg-gradient-to-r from-vibez-blue to-vibez-purple leading-tight">
+              WHO MIGHT YOU BE?
             </h2>
             <p className="text-gray-600 text-xl mb-16 font-comic tracking-wide">Enter your real name or alias.</p>
 
@@ -114,8 +114,8 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onCancel }) => {
 
         {step === 2 && (
           <div className="flex-1 flex flex-col animate-in fade-in slide-in-from-bottom-8 duration-500">
-            <h2 className="text-5xl md:text-7xl font-action mb-6 bg-clip-text text-transparent bg-gradient-to-r from-vibez-purple to-vibez-blue leading-tight">
-              PHOTO <br />CONFIRMATION
+            <h2 className="text-3xl md:text-5xl font-action mb-6 bg-clip-text text-transparent bg-gradient-to-r from-vibez-purple to-vibez-blue leading-tight">
+              PHOTO CONFIRMATION
             </h2>
             <p className="text-gray-600 text-xl mb-12 font-comic tracking-wide">We need a selfie to generate your digital card.</p>
 
@@ -150,20 +150,22 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onCancel }) => {
             )}
 
             {!selfie && (
-              <button
-                onClick={() => setStep(1)}
-                className="mt-10 py-3 text-gray-500 font-bold uppercase tracking-widest text-sm hover:text-gray-700 self-center"
-              >
-                GO BACK TO NAME
-              </button>
+              <div className="mt-10">
+                <button
+                  onClick={() => setStep(1)}
+                  className="p-3 bg-white border border-gray-200 hover:bg-gray-50 rounded-full transition-colors shadow-sm"
+                >
+                  <ArrowLeft className="w-6 h-6 text-gray-700" />
+                </button>
+              </div>
             )}
           </div>
         )}
 
         {step === 3 && (
           <div className="flex-1 flex flex-col animate-in fade-in slide-in-from-bottom-8 duration-500">
-            <h2 className="text-5xl md:text-7xl font-action mb-6 bg-clip-text text-transparent bg-gradient-to-r from-vibez-blue to-vibez-purple leading-tight">
-              SUPER <br />POWERS
+            <h2 className="text-3xl md:text-5xl font-action mb-6 bg-clip-text text-transparent bg-gradient-to-r from-vibez-blue to-vibez-purple leading-tight">
+              SUPER POWERS
             </h2>
             <p className="text-gray-600 text-xl mb-12 font-comic tracking-wide">
               Tell us the top Super Powers that make you an incredible Super Staffer. You can skip for now or specify up to 5.
@@ -177,26 +179,26 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onCancel }) => {
               />
             </div>
 
-            <div className="pt-8 flex gap-4 justify-between">
+            <div className="pt-8 flex gap-4 items-center">
               <button
                 onClick={() => setStep(2)}
-                className="flex-1 bg-gradient-to-r from-vibez-blue to-vibez-purple text-white font-action text-xl py-6 rounded-full shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all"
+                className="p-3 bg-white border border-gray-200 hover:bg-gray-50 rounded-full transition-colors shadow-sm"
               >
-                BACK
+                <ArrowLeft className="w-6 h-6 text-gray-700" />
               </button>
               <button
                 onClick={handleSkipStrengths}
                 disabled={isUploading}
-                className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white font-action text-xl py-6 rounded-full shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
+                className="flex-1 bg-white border-2 border-gray-300 text-gray-700 font-action text-xl py-5 rounded-2xl shadow-sm hover:shadow-md hover:border-gray-400 transition-all disabled:opacity-50"
               >
                 SKIP
               </button>
               <button
                 onClick={() => setStep(4)}
                 disabled={isUploading}
-                className="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white font-action text-xl py-6 rounded-full shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 bg-gradient-to-r from-vibez-blue to-vibez-purple text-white font-action text-xl py-5 rounded-2xl shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                CONFIRM
+                NEXT
               </button>
             </div>
           </div>
@@ -204,8 +206,8 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onCancel }) => {
 
         {step === 4 && (
           <div className="flex-1 flex flex-col animate-in fade-in slide-in-from-bottom-8 duration-500">
-            <h2 className="text-5xl md:text-7xl font-action mb-6 bg-clip-text text-transparent bg-gradient-to-r from-vibez-blue to-vibez-purple leading-tight">
-              ORIGIN <br />STORY
+            <h2 className="text-3xl md:text-5xl font-action mb-6 bg-clip-text text-transparent bg-gradient-to-r from-vibez-blue to-vibez-purple leading-tight">
+              ORIGIN STORY
             </h2>
             <p className="text-gray-600 text-xl mb-8 font-comic tracking-wide">
               How did you come to join forces with your colleagues and what is your role?
@@ -232,32 +234,32 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onCancel }) => {
               </div>
             </div>
 
-            <div className="pt-8 flex gap-4 justify-between">
+            <div className="pt-8 flex gap-4 items-center">
               <button
                 onClick={() => setStep(3)}
-                className="flex-1 bg-gradient-to-r from-vibez-blue to-vibez-purple text-white font-action text-xl py-6 rounded-full shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all"
+                className="p-3 bg-white border border-gray-200 hover:bg-gray-50 rounded-full transition-colors shadow-sm"
               >
-                BACK
+                <ArrowLeft className="w-6 h-6 text-gray-700" />
               </button>
               <button
                 onClick={handleSkipStory}
                 disabled={isUploading}
-                className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white font-action text-xl py-6 rounded-full shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
+                className="flex-1 bg-white border-2 border-gray-300 text-gray-700 font-action text-xl py-5 rounded-2xl shadow-sm hover:shadow-md hover:border-gray-400 transition-all disabled:opacity-50"
               >
                 SKIP
               </button>
               <button
                 onClick={handleFinish}
                 disabled={isUploading}
-                className="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white font-action text-xl py-6 rounded-full shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 bg-gradient-to-r from-vibez-blue to-vibez-purple text-white font-action text-xl py-5 rounded-2xl shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isUploading ? (
                   <>
-                    <Loader2 className="w-6 h-6 animate-spin" />
+                    <Loader2 className="w-6 h-6 animate-spin inline-block mr-2" />
                     SAVING...
                   </>
                 ) : (
-                  'CONFIRM'
+                  'NEXT'
                 )}
               </button>
             </div>

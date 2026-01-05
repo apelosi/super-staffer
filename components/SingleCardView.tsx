@@ -28,17 +28,305 @@ const SingleCardView: React.FC<SingleCardViewProps> = ({
   const [isDownloading, setIsDownloading] = useState(false);
   const [isFlipped, setIsFlipped] = useState(false);
 
+  const renderCardBack = async (canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) => {
+    const width = 750;
+    const height = 1050;
+
+    // Background gradient (slate-900 to slate-800)
+    const bgGradient = ctx.createLinearGradient(0, 0, width, height);
+    bgGradient.addColorStop(0, '#0f172a');  // slate-900
+    bgGradient.addColorStop(0.5, '#1e293b'); // slate-800
+    bgGradient.addColorStop(1, '#0f172a');  // slate-900
+    ctx.fillStyle = bgGradient;
+    ctx.fillRect(0, 0, width, height);
+
+    // Decorative diagonal stripe pattern
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+    ctx.lineWidth = 20;
+    for (let i = -height; i < width + height; i += 40) {
+      ctx.beginPath();
+      ctx.moveTo(i, 0);
+      ctx.lineTo(i + height, height);
+      ctx.stroke();
+    }
+
+    // Corner decorations
+    ctx.strokeStyle = 'rgba(0, 180, 216, 0.6)'; // vibez-blue
+    ctx.lineWidth = 8;
+    // Top-left
+    ctx.beginPath();
+    ctx.moveTo(100, 40);
+    ctx.lineTo(40, 40);
+    ctx.lineTo(40, 100);
+    ctx.stroke();
+    // Top-right
+    ctx.strokeStyle = 'rgba(114, 9, 183, 0.6)'; // vibez-purple
+    ctx.beginPath();
+    ctx.moveTo(width - 100, 40);
+    ctx.lineTo(width - 40, 40);
+    ctx.lineTo(width - 40, 100);
+    ctx.stroke();
+    // Bottom-left
+    ctx.strokeStyle = 'rgba(114, 9, 183, 0.6)';
+    ctx.beginPath();
+    ctx.moveTo(40, height - 100);
+    ctx.lineTo(40, height - 40);
+    ctx.lineTo(100, height - 40);
+    ctx.stroke();
+    // Bottom-right
+    ctx.strokeStyle = 'rgba(0, 180, 216, 0.6)';
+    ctx.beginPath();
+    ctx.moveTo(width - 100, height - 40);
+    ctx.lineTo(width - 40, height - 40);
+    ctx.lineTo(width - 40, height - 100);
+    ctx.stroke();
+
+    // Draw Vibez logo (top-left)
+    try {
+      const logoImg = new Image();
+      const svgBlob = new Blob([VIBEZ_LOGO_SVG], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(svgBlob);
+      await new Promise((resolve, reject) => {
+        logoImg.onload = () => {
+          ctx.drawImage(logoImg, 50, 50, 50, 50);
+          URL.revokeObjectURL(url);
+          resolve(null);
+        };
+        logoImg.onerror = reject;
+        logoImg.src = url;
+      });
+    } catch (error) {
+      console.warn('Logo rendering failed', error);
+    }
+
+    // Header text - "SUPER STAFFERS"
+    ctx.font = 'bold 16px Arial, sans-serif';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+    ctx.textAlign = 'center';
+    ctx.fillText('SUPER STAFFERS', width / 2, 75);
+
+    // Card ID
+    ctx.font = 'bold 16px Arial, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(`#${card.id.slice(0, 6)}`, width - 50, 75);
+
+    // Name banner with gradient background
+    const nameY = 140;
+    const nameGradient = ctx.createLinearGradient(100, nameY - 30, width - 100, nameY - 30);
+    nameGradient.addColorStop(0, '#00B4D8'); // vibez-blue
+    nameGradient.addColorStop(1, '#7209B7'); // vibez-purple
+    ctx.fillStyle = nameGradient;
+    ctx.roundRect(100, nameY - 40, width - 200, 60, 8);
+    ctx.fill();
+
+    // Name text
+    ctx.font = 'bold 32px Arial, sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.fillText(card.userName.toUpperCase(), width / 2, nameY);
+
+    // Stats section background
+    const statsY = 230;
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.roundRect(60, statsY, width - 120, 80, 12);
+    ctx.fill();
+
+    // Stats boxes
+    const statBoxWidth = (width - 160) / 3;
+    const statBoxes = [
+      { label: 'THEME', value: card.theme, x: 80, width: statBoxWidth * 1.5 },
+      { label: 'ALIGNMENT', value: card.alignment, x: 80 + statBoxWidth * 1.5 + 20, width: statBoxWidth * 0.75 - 10, color: card.alignment === 'Hero' ? '#22d3ee' : '#f87171' },
+      { label: 'CREATED', value: new Date(card.timestamp).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }), x: 80 + statBoxWidth * 2.25 + 30, width: statBoxWidth * 0.75 - 10 }
+    ];
+
+    statBoxes.forEach(box => {
+      // Stat box background
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+      ctx.roundRect(box.x, statsY + 15, box.width, 50, 8);
+      ctx.fill();
+
+      // Label
+      ctx.font = 'bold 12px Arial, sans-serif';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+      ctx.textAlign = 'left';
+      ctx.fillText(box.label, box.x + 15, statsY + 32);
+
+      // Value
+      ctx.font = 'bold 18px Arial, sans-serif';
+      ctx.fillStyle = box.color || '#ffffff';
+      ctx.fillText(box.value, box.x + 15, statsY + 52);
+    });
+
+    // Super Powers section
+    const powersY = 340;
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.roundRect(60, powersY, width - 120, height - powersY - 140, 12);
+    ctx.fill();
+
+    // Super Powers header with decorative lines
+    ctx.font = 'bold 18px Arial, sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    const headerText = 'SUPER POWERS';
+    const headerWidth = ctx.measureText(headerText).width;
+
+    // Decorative lines
+    const lineGradient1 = ctx.createLinearGradient(80, powersY + 30, width / 2 - headerWidth / 2 - 20, powersY + 30);
+    lineGradient1.addColorStop(0, 'transparent');
+    lineGradient1.addColorStop(1, '#00B4D8');
+    ctx.strokeStyle = lineGradient1;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(80, powersY + 30);
+    ctx.lineTo(width / 2 - headerWidth / 2 - 20, powersY + 30);
+    ctx.stroke();
+
+    const lineGradient2 = ctx.createLinearGradient(width / 2 + headerWidth / 2 + 20, powersY + 30, width - 80, powersY + 30);
+    lineGradient2.addColorStop(0, '#7209B7');
+    lineGradient2.addColorStop(1, 'transparent');
+    ctx.strokeStyle = lineGradient2;
+    ctx.beginPath();
+    ctx.moveTo(width / 2 + headerWidth / 2 + 20, powersY + 30);
+    ctx.lineTo(width - 80, powersY + 30);
+    ctx.stroke();
+
+    ctx.fillText(headerText, width / 2, powersY + 35);
+
+    // Super Powers list
+    let powerY = powersY + 65;
+    if (user?.strengths && user.strengths.length > 0) {
+      user.strengths.forEach((strength: string) => {
+        // Power item background
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+        ctx.roundRect(90, powerY - 20, width - 180, 35, 8);
+        ctx.fill();
+
+        // Sparkle icon (simple star)
+        ctx.fillStyle = '#00B4D8';
+        ctx.font = '16px Arial';
+        ctx.textAlign = 'left';
+        ctx.fillText('★', 105, powerY);
+
+        // Power text
+        ctx.font = '18px Arial, sans-serif';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.fillText(strength, 135, powerY);
+
+        powerY += 45;
+      });
+    } else {
+      ctx.font = 'italic 16px Arial, sans-serif';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+      ctx.textAlign = 'center';
+      ctx.fillText('No super powers specified', width / 2, powerY);
+    }
+
+    // Origin Story section
+    const storyY = powerY + 40;
+
+    // Divider line
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(90, storyY - 10);
+    ctx.lineTo(width - 90, storyY - 10);
+    ctx.stroke();
+
+    // Origin Story header
+    ctx.font = 'bold 18px Arial, sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    const storyHeaderText = 'ORIGIN STORY';
+    const storyHeaderWidth = ctx.measureText(storyHeaderText).width;
+
+    // Decorative lines for story header
+    const storyLine1 = ctx.createLinearGradient(80, storyY + 15, width / 2 - storyHeaderWidth / 2 - 20, storyY + 15);
+    storyLine1.addColorStop(0, 'transparent');
+    storyLine1.addColorStop(1, '#7209B7');
+    ctx.strokeStyle = storyLine1;
+    ctx.beginPath();
+    ctx.moveTo(80, storyY + 15);
+    ctx.lineTo(width / 2 - storyHeaderWidth / 2 - 20, storyY + 15);
+    ctx.stroke();
+
+    const storyLine2 = ctx.createLinearGradient(width / 2 + storyHeaderWidth / 2 + 20, storyY + 15, width - 80, storyY + 15);
+    storyLine2.addColorStop(0, '#00B4D8');
+    storyLine2.addColorStop(1, 'transparent');
+    ctx.strokeStyle = storyLine2;
+    ctx.beginPath();
+    ctx.moveTo(width / 2 + storyHeaderWidth / 2 + 20, storyY + 15);
+    ctx.lineTo(width - 80, storyY + 15);
+    ctx.stroke();
+
+    ctx.fillText(storyHeaderText, width / 2, storyY + 20);
+
+    // Origin Story text (word wrap)
+    if (user?.story && user.story.trim()) {
+      ctx.font = '16px Arial, sans-serif';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+      ctx.textAlign = 'left';
+
+      const maxWidth = width - 180;
+      const words = user.story.split(' ');
+      let line = '';
+      let lineY = storyY + 50;
+
+      words.forEach((word, index) => {
+        const testLine = line + word + ' ';
+        const metrics = ctx.measureText(testLine);
+
+        if (metrics.width > maxWidth && index > 0) {
+          ctx.fillText(line, 90, lineY);
+          line = word + ' ';
+          lineY += 24;
+        } else {
+          line = testLine;
+        }
+      });
+      ctx.fillText(line, 90, lineY);
+    } else {
+      ctx.font = 'italic 16px Arial, sans-serif';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+      ctx.textAlign = 'center';
+      ctx.fillText('No origin story specified', width / 2, storyY + 50);
+    }
+
+    // Footer with ss.vibez.ventures
+    const footerY = height - 50;
+    ctx.font = 'bold 16px Arial, sans-serif';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+    ctx.textAlign = 'center';
+    const footerText = 'ss.vibez.ventures';
+    const footerWidth = ctx.measureText(footerText).width;
+
+    // Footer decorative lines
+    const footerLine1 = ctx.createLinearGradient(80, footerY, width / 2 - footerWidth / 2 - 20, footerY);
+    footerLine1.addColorStop(0, 'transparent');
+    footerLine1.addColorStop(0.5, '#00B4D8');
+    footerLine1.addColorStop(1, '#00B4D8');
+    ctx.strokeStyle = footerLine1;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(80, footerY);
+    ctx.lineTo(width / 2 - footerWidth / 2 - 20, footerY);
+    ctx.stroke();
+
+    const footerLine2 = ctx.createLinearGradient(width / 2 + footerWidth / 2 + 20, footerY, width - 80, footerY);
+    footerLine2.addColorStop(0, '#7209B7');
+    footerLine2.addColorStop(0.5, '#7209B7');
+    footerLine2.addColorStop(1, 'transparent');
+    ctx.strokeStyle = footerLine2;
+    ctx.beginPath();
+    ctx.moveTo(width / 2 + footerWidth / 2 + 20, footerY);
+    ctx.lineTo(width - 80, footerY);
+    ctx.stroke();
+
+    ctx.fillText(footerText, width / 2, footerY + 5);
+  };
+
   const handleDownload = async () => {
     setIsDownloading(true);
     try {
-      // If viewing the back (flipped state), just show alert for now
-      // In future, we could render the back side to canvas
-      if (isFlipped) {
-        alert('Back side download coming soon! For now, please flip to front to download.');
-        setIsDownloading(false);
-        return;
-      }
-
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
@@ -48,6 +336,21 @@ const SingleCardView: React.FC<SingleCardViewProps> = ({
       canvas.width = width;
       canvas.height = height;
 
+      // If viewing the back, render the back design
+      if (isFlipped) {
+        await renderCardBack(canvas, ctx);
+
+        const dataUrl = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.download = `SuperStaffer-${card.userName}-${card.theme}-BACK.png`;
+        link.href = dataUrl;
+        link.click();
+
+        setIsDownloading(false);
+        return;
+      }
+
+      // Otherwise render the front card
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, width, height);
 
