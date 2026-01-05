@@ -3,7 +3,7 @@ import { User, CardData } from '../types';
 import TradingCard from './TradingCard';
 import SuperPowersInput from './SuperPowersInput';
 import CameraCapture from './CameraCapture';
-import { Plus, Sparkles, Edit2, Check, X, Camera, Loader2 } from 'lucide-react';
+import { Plus, Sparkles, Camera, Loader2, X, Check } from 'lucide-react';
 import Layout from './Layout';
 
 interface DashboardProps {
@@ -24,50 +24,43 @@ const Dashboard: React.FC<DashboardProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'collection' | 'personalize'>('collection');
 
-  // Personalize tab state
-  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  // Per-field editing state
+  const [editingField, setEditingField] = useState<'name' | 'selfie' | 'strengths' | 'story' | null>(null);
   const [editedName, setEditedName] = useState(user.name);
   const [editedSelfie, setEditedSelfie] = useState(user.selfie);
   const [editedStrengths, setEditedStrengths] = useState<string[]>(user.strengths || []);
   const [editedStory, setEditedStory] = useState(user.story || '');
   const [showCamera, setShowCamera] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+  const [savingField, setSavingField] = useState<string | null>(null);
 
-  const handleStartEdit = () => {
-    setEditedName(user.name);
-    setEditedSelfie(user.selfie);
-    setEditedStrengths(user.strengths || []);
-    setEditedStory(user.story || '');
-    setIsEditingProfile(true);
+  const handleCancelField = (field: 'name' | 'selfie' | 'strengths' | 'story') => {
+    if (field === 'name') setEditedName(user.name);
+    if (field === 'selfie') {
+      setEditedSelfie(user.selfie);
+      setShowCamera(false);
+    }
+    if (field === 'strengths') setEditedStrengths(user.strengths || []);
+    if (field === 'story') setEditedStory(user.story || '');
+    setEditingField(null);
   };
 
-  const handleCancelEdit = () => {
-    setEditedName(user.name);
-    setEditedSelfie(user.selfie);
-    setEditedStrengths(user.strengths || []);
-    setEditedStory(user.story || '');
-    setIsEditingProfile(false);
-    setShowCamera(false);
-  };
-
-  const handleSaveProfile = async () => {
-    setIsSaving(true);
+  const handleSaveField = async (field: 'name' | 'selfie' | 'strengths' | 'story') => {
+    setSavingField(field);
     try {
-      const updatedUser: User = {
-        ...user,
-        name: editedName,
-        selfie: editedSelfie,
-        strengths: editedStrengths,
-        story: editedStory.trim() || undefined,
-      };
+      const updatedUser: User = { ...user };
+      if (field === 'name') updatedUser.name = editedName;
+      if (field === 'selfie') updatedUser.selfie = editedSelfie;
+      if (field === 'strengths') updatedUser.strengths = editedStrengths.length > 0 ? editedStrengths : undefined;
+      if (field === 'story') updatedUser.story = editedStory.trim() || undefined;
+
       await onUpdateUser(updatedUser);
-      setIsEditingProfile(false);
+      setEditingField(null);
       setShowCamera(false);
     } catch (error) {
-      console.error('Failed to update profile:', error);
-      alert('Failed to save profile. Please try again.');
+      console.error('Failed to update field:', error);
+      alert('Failed to save changes. Please try again.');
     } finally {
-      setIsSaving(false);
+      setSavingField(null);
     }
   };
 
@@ -75,6 +68,11 @@ const Dashboard: React.FC<DashboardProps> = ({
     setEditedSelfie(base64);
     setShowCamera(false);
   };
+
+  const hasNameChanged = editedName !== user.name;
+  const hasSelfieChanged = editedSelfie !== user.selfie;
+  const hasStrengthsChanged = JSON.stringify(editedStrengths) !== JSON.stringify(user.strengths || []);
+  const hasStoryChanged = editedStory !== (user.story || '');
 
   return (
     <Layout>
@@ -158,89 +156,101 @@ const Dashboard: React.FC<DashboardProps> = ({
         {/* Personalize Tab */}
         {activeTab === 'personalize' && (
           <div className="max-w-4xl mx-auto space-y-8">
-            {/* Edit Controls */}
-            <div className="flex justify-end">
-              {!isEditingProfile ? (
-                <button
-                  onClick={handleStartEdit}
-                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-vibez-blue to-vibez-purple text-white rounded-lg hover:shadow-lg transition-all font-action"
-                >
-                  <Edit2 className="w-5 h-5" />
-                  EDIT PROFILE
-                </button>
-              ) : (
-                <div className="flex gap-3">
+            {/* Name Section */}
+            <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-6 md:p-8 border-2 border-gray-200 shadow-sm">
+              <h3 className="font-action text-xl text-gray-900 mb-4">NAME</h3>
+              <input
+                type="text"
+                value={editedName}
+                onChange={(e) => {
+                  setEditedName(e.target.value);
+                  if (editingField !== 'name') setEditingField('name');
+                }}
+                className="w-full p-4 bg-white border-2 border-gray-200 rounded-xl focus:border-vibez-blue focus:outline-none text-gray-700 font-comic text-lg transition-colors"
+                placeholder="Your name"
+              />
+              {hasNameChanged && editingField === 'name' && (
+                <div className="flex gap-3 mt-4 justify-end">
                   <button
-                    onClick={handleCancelEdit}
-                    disabled={isSaving}
-                    className="flex items-center gap-2 px-6 py-3 text-gray-600 hover:text-gray-800 transition-colors font-action disabled:opacity-50"
+                    onClick={() => handleCancelField('name')}
+                    disabled={savingField === 'name'}
+                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:shadow-lg transition-all font-action disabled:opacity-50"
                   >
                     <X className="w-5 h-5" />
                     CANCEL
                   </button>
                   <button
-                    onClick={handleSaveProfile}
-                    disabled={isSaving}
-                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-vibez-blue to-vibez-purple text-white rounded-lg hover:shadow-lg transition-all font-action disabled:opacity-50"
+                    onClick={() => handleSaveField('name')}
+                    disabled={savingField === 'name'}
+                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:shadow-lg transition-all font-action disabled:opacity-50"
                   >
-                    {isSaving ? (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        SAVING...
-                      </>
+                    {savingField === 'name' ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
                     ) : (
-                      <>
-                        <Check className="w-5 h-5" />
-                        SAVE CHANGES
-                      </>
+                      <Check className="w-5 h-5" />
                     )}
+                    SAVE
                   </button>
                 </div>
-              )}
-            </div>
-
-            {/* Name Section */}
-            <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-6 md:p-8 border-2 border-gray-200 shadow-sm">
-              <h3 className="font-action text-xl text-gray-900 mb-4">NAME</h3>
-              {isEditingProfile ? (
-                <input
-                  type="text"
-                  value={editedName}
-                  onChange={(e) => setEditedName(e.target.value)}
-                  className="w-full p-4 bg-white border-2 border-gray-200 rounded-xl focus:border-vibez-blue focus:outline-none text-gray-700 font-comic text-lg transition-colors"
-                  placeholder="Your name"
-                />
-              ) : (
-                <p className="text-2xl font-action text-gray-900">{user.name}</p>
               )}
             </div>
 
             {/* Selfie Section */}
             <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-6 md:p-8 border-2 border-gray-200 shadow-sm">
               <h3 className="font-action text-xl text-gray-900 mb-4">SELFIE</h3>
-              {isEditingProfile && showCamera ? (
+              {showCamera ? (
                 <div className="space-y-4">
                   <CameraCapture onCapture={handleCaptureNewSelfie} />
                   <button
-                    onClick={() => setShowCamera(false)}
+                    onClick={() => {
+                      setShowCamera(false);
+                      handleCancelField('selfie');
+                    }}
                     className="w-full py-3 text-gray-600 font-action hover:text-gray-800 transition-colors"
                   >
                     CANCEL
                   </button>
                 </div>
               ) : (
-                <div className="flex flex-col md:flex-row items-center gap-6">
-                  <div className="relative aspect-[3/4] w-48 rounded-2xl overflow-hidden border-4 border-gray-200 shadow-lg">
-                    <img src={isEditingProfile ? editedSelfie : user.selfie} alt="Profile" className="w-full h-full object-cover" />
-                  </div>
-                  {isEditingProfile && (
+                <div className="space-y-4">
+                  <div className="flex flex-col md:flex-row items-center gap-6">
+                    <div className="relative w-48 rounded-2xl overflow-hidden border-4 border-gray-200 shadow-lg">
+                      <img src={editedSelfie} alt="Profile" className="w-full h-auto object-contain" />
+                    </div>
                     <button
-                      onClick={() => setShowCamera(true)}
+                      onClick={() => {
+                        setShowCamera(true);
+                        if (editingField !== 'selfie') setEditingField('selfie');
+                      }}
                       className="flex items-center gap-2 px-6 py-3 bg-white border-2 border-vibez-blue text-vibez-blue rounded-lg hover:bg-vibez-blue hover:text-white transition-all font-action"
                     >
                       <Camera className="w-5 h-5" />
                       UPDATE SELFIE
                     </button>
+                  </div>
+                  {hasSelfieChanged && editingField === 'selfie' && (
+                    <div className="flex gap-3 justify-end">
+                      <button
+                        onClick={() => handleCancelField('selfie')}
+                        disabled={savingField === 'selfie'}
+                        className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:shadow-lg transition-all font-action disabled:opacity-50"
+                      >
+                        <X className="w-5 h-5" />
+                        CANCEL
+                      </button>
+                      <button
+                        onClick={() => handleSaveField('selfie')}
+                        disabled={savingField === 'selfie'}
+                        className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:shadow-lg transition-all font-action disabled:opacity-50"
+                      >
+                        {savingField === 'selfie' ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <Check className="w-5 h-5" />
+                        )}
+                        SAVE
+                      </button>
+                    </div>
                   )}
                 </div>
               )}
@@ -253,31 +263,37 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <h3 className="font-action text-xl text-gray-900">SUPER POWERS</h3>
               </div>
 
-              {isEditingProfile ? (
-                <SuperPowersInput
-                  strengths={editedStrengths}
-                  onStrengthsChange={setEditedStrengths}
-                  maxStrengths={5}
-                />
-              ) : (
-                <div>
-                  {user.strengths && user.strengths.length > 0 ? (
-                    <div className="flex flex-wrap gap-3">
-                      {user.strengths.map((strength, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center gap-2 bg-gradient-to-r from-vibez-blue to-vibez-purple text-white px-4 py-2 rounded-full font-action text-sm"
-                        >
-                          <Sparkles className="w-4 h-4" />
-                          {strength}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-gray-400 font-comic italic">
-                      No super powers added yet. Click EDIT PROFILE to add your character strengths!
-                    </p>
-                  )}
+              <SuperPowersInput
+                strengths={editedStrengths}
+                onStrengthsChange={(newStrengths) => {
+                  setEditedStrengths(newStrengths);
+                  if (editingField !== 'strengths') setEditingField('strengths');
+                }}
+                maxStrengths={5}
+              />
+
+              {hasStrengthsChanged && editingField === 'strengths' && (
+                <div className="flex gap-3 mt-6 justify-end">
+                  <button
+                    onClick={() => handleCancelField('strengths')}
+                    disabled={savingField === 'strengths'}
+                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:shadow-lg transition-all font-action disabled:opacity-50"
+                  >
+                    <X className="w-5 h-5" />
+                    CANCEL
+                  </button>
+                  <button
+                    onClick={() => handleSaveField('strengths')}
+                    disabled={savingField === 'strengths'}
+                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:shadow-lg transition-all font-action disabled:opacity-50"
+                  >
+                    {savingField === 'strengths' ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <Check className="w-5 h-5" />
+                    )}
+                    SAVE
+                  </button>
                 </div>
               )}
             </div>
@@ -285,36 +301,50 @@ const Dashboard: React.FC<DashboardProps> = ({
             {/* Origin Story Section */}
             <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-6 md:p-8 border-2 border-gray-200 shadow-sm">
               <h3 className="font-action text-xl text-gray-900 mb-4">ORIGIN STORY</h3>
-              {isEditingProfile ? (
-                <div className="space-y-2">
-                  <textarea
-                    value={editedStory}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      if (value.length <= 144) {
-                        setEditedStory(value);
-                      }
-                    }}
-                    placeholder="How did you come to join forces with your colleagues and what is your role?"
-                    className="w-full h-32 p-4 bg-white border-2 border-gray-200 rounded-xl focus:border-vibez-blue focus:outline-none resize-none text-gray-700 font-comic text-lg transition-colors"
-                    maxLength={144}
-                  />
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-500">Maximum 144 characters</span>
-                    <span className={`font-action text-sm ${editedStory.length >= 144 ? 'text-vibez-purple' : 'text-gray-500'}`}>
-                      {editedStory.length} / 144
-                    </span>
-                  </div>
+              <div className="space-y-2">
+                <textarea
+                  value={editedStory}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value.length <= 256) {
+                      setEditedStory(value);
+                      if (editingField !== 'story') setEditingField('story');
+                    }
+                  }}
+                  placeholder="How did you come to join forces with your colleagues and what is your role?"
+                  className="w-full h-32 p-4 bg-white border-2 border-gray-200 rounded-xl focus:border-vibez-blue focus:outline-none resize-none text-gray-700 font-comic text-lg transition-colors"
+                  maxLength={256}
+                />
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500">Maximum 256 characters</span>
+                  <span className={`font-action text-sm ${editedStory.length >= 256 ? 'text-vibez-purple' : 'text-gray-500'}`}>
+                    {editedStory.length} / 256
+                  </span>
                 </div>
-              ) : (
-                <div>
-                  {user.story && user.story.trim() ? (
-                    <p className="text-gray-700 font-comic text-lg leading-relaxed">{user.story}</p>
-                  ) : (
-                    <p className="text-gray-400 font-comic italic">
-                      No origin story added yet. Click EDIT PROFILE to share your story!
-                    </p>
-                  )}
+              </div>
+
+              {hasStoryChanged && editingField === 'story' && (
+                <div className="flex gap-3 mt-4 justify-end">
+                  <button
+                    onClick={() => handleCancelField('story')}
+                    disabled={savingField === 'story'}
+                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:shadow-lg transition-all font-action disabled:opacity-50"
+                  >
+                    <X className="w-5 h-5" />
+                    CANCEL
+                  </button>
+                  <button
+                    onClick={() => handleSaveField('story')}
+                    disabled={savingField === 'story'}
+                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:shadow-lg transition-all font-action disabled:opacity-50"
+                  >
+                    {savingField === 'story' ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <Check className="w-5 h-5" />
+                    )}
+                    SAVE
+                  </button>
                 </div>
               )}
             </div>

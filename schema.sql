@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS users (
   name TEXT NOT NULL,
   selfie_url TEXT NOT NULL,
   strengths TEXT[] DEFAULT '{}',
-  story VARCHAR(144) DEFAULT '',
+  story VARCHAR(256) DEFAULT '',
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );

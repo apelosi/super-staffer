@@ -144,8 +144,8 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture }) => {
             >
               <Camera className="w-14 h-14 text-vibez-blue transition-transform duration-300 group-hover:scale-110" strokeWidth={2.5} />
             </div>
-            <span className="font-action text-lg uppercase text-gray-900 mb-2 tracking-wide">USE CAMERA</span>
-            <span className="text-gray-500 text-xs uppercase font-bold tracking-wider">Instant Identity Scan</span>
+            <span className="font-action text-lg uppercase text-gray-900 mb-2 tracking-wide">CAMERA</span>
+            <span className="text-gray-500 text-xs uppercase font-bold tracking-wider">Take a Selfie</span>
           </button>
 
           <button
@@ -169,8 +169,8 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture }) => {
             >
               <Upload className="w-14 h-14 text-vibez-purple transition-transform duration-300 group-hover:scale-110" strokeWidth={2.5} />
             </div>
-            <span className="font-action text-lg uppercase text-gray-900 mb-2 tracking-wide">UPLOAD FILE</span>
-            <span className="text-gray-500 text-xs uppercase font-bold tracking-wider">Legacy Archive Import</span>
+            <span className="font-action text-lg uppercase text-gray-900 mb-2 tracking-wide">FILE</span>
+            <span className="text-gray-500 text-xs uppercase font-bold tracking-wider">Upload a Selfie</span>
             <input
               ref={fileInputRef}
               type="file"

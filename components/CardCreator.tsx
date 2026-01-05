@@ -196,11 +196,12 @@ const CardCreator: React.FC<CardCreatorProps> = ({ user, onCancel, onSuccess }) 
               const isHovered = hoveredTheme === theme.name;
 
               return (
-                <motion.div
+                <motion.button
                   key={theme.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: index * 0.05 }}
+                  onClick={() => handleThemeSelect(theme.name)}
                   onMouseEnter={() => setHoveredTheme(theme.name)}
                   onMouseLeave={() => setHoveredTheme(null)}
                   className={`group relative bg-white rounded-3xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden ${
@@ -245,8 +246,7 @@ const CardCreator: React.FC<CardCreatorProps> = ({ user, onCancel, onSuccess }) 
                     <div className={`w-full transition-opacity duration-300 ${
                       isHovered ? 'opacity-100' : 'opacity-0'
                     }`}>
-                      <button
-                        onClick={() => handleThemeSelect(theme.name)}
+                      <div
                         className="w-full flex items-center justify-center gap-2 px-4 py-2.5 font-action text-xs font-bold uppercase tracking-wide transition-all duration-300 rounded-lg"
                         style={{
                           backgroundColor: isHovered ? theme.colors.from : 'transparent',
@@ -255,10 +255,10 @@ const CardCreator: React.FC<CardCreatorProps> = ({ user, onCancel, onSuccess }) 
                       >
                         <span>CREATE</span>
                         <ArrowRight className="w-3.5 h-3.5" strokeWidth={3} />
-                      </button>
+                      </div>
                     </div>
                   </div>
-                </motion.div>
+                </motion.button>
               );
             })}
           </div>

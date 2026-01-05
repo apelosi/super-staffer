@@ -3,7 +3,7 @@ import { useUser } from '@clerk/clerk-react';
 import CameraCapture from './CameraCapture';
 import SuperPowersInput from './SuperPowersInput';
 import { User } from '../types';
-import { ArrowRight, Loader2, ArrowLeft } from 'lucide-react';
+import { ArrowRight, Loader2 } from 'lucide-react';
 
 interface OnboardingProps {
   onComplete: (user: User) => void;
@@ -84,9 +84,9 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onCancel }) => {
         {step === 1 && (
           <form onSubmit={handleNameSubmit} className="flex-1 flex flex-col animate-in fade-in slide-in-from-bottom-8 duration-500">
             <h2 className="text-5xl md:text-7xl font-action mb-6 bg-clip-text text-transparent bg-gradient-to-r from-vibez-blue to-vibez-purple leading-tight">
-              WHICH SOUL <br />ARE WE <br />SCANNING?
+              WHO IS THIS <br />SUPER <br />STAFFER?
             </h2>
-            <p className="text-gray-600 text-xl mb-16 font-comic tracking-wide">Enter your real name or hero alias.</p>
+            <p className="text-gray-600 text-xl mb-16 font-comic tracking-wide">Enter your real name or alias.</p>
 
             <div className="relative group mb-8">
               <input
@@ -115,9 +115,9 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onCancel }) => {
         {step === 2 && (
           <div className="flex-1 flex flex-col animate-in fade-in slide-in-from-bottom-8 duration-500">
             <h2 className="text-5xl md:text-7xl font-action mb-6 bg-clip-text text-transparent bg-gradient-to-r from-vibez-purple to-vibez-blue leading-tight">
-              IDENTITY <br />CONFIRMATION
+              PHOTO <br />CONFIRMATION
             </h2>
-            <p className="text-gray-600 text-xl mb-12 font-comic tracking-wide">We need a scan for the archives.</p>
+            <p className="text-gray-600 text-xl mb-12 font-comic tracking-wide">We need a selfie to generate your digital card.</p>
 
             {!selfie ? (
               <div className="flex-1 flex flex-col justify-center">
@@ -127,24 +127,23 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onCancel }) => {
               <div className="flex-1 flex flex-col justify-center items-center space-y-10">
                 <div className="relative group">
                   <div className="absolute inset-0 bg-gradient-to-r from-vibez-blue to-vibez-purple rounded-3xl blur-3xl opacity-30 group-hover:opacity-50 transition-opacity" />
-                  <div className="relative aspect-[3/4] w-72 md:w-96 rounded-3xl overflow-hidden border-4 border-gray-200 shadow-2xl">
-                    <img src={selfie} alt="Captured" className="w-full h-full object-cover" />
+                  <div className="relative w-72 md:w-96 rounded-3xl overflow-hidden border-4 border-gray-200 shadow-2xl">
+                    <img src={selfie} alt="Captured" className="w-full h-auto object-contain" />
                   </div>
                 </div>
 
-                <div className="flex flex-col w-full max-w-md gap-5">
-                  <button
-                    onClick={handleSelfieConfirm}
-                    className="w-full bg-gradient-to-r from-vibez-blue to-vibez-purple text-white font-action text-2xl py-7 rounded-full shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-                  >
-                    CONFIRM IDENTITY
-                    <ArrowRight className="w-7 h-7" />
-                  </button>
+                <div className="flex gap-4 w-full max-w-md">
                   <button
                     onClick={() => setSelfie('')}
-                    className="w-full py-5 text-gray-500 font-bold uppercase tracking-widest hover:text-gray-700 transition-colors"
+                    className="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white font-action text-xl py-6 rounded-full shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all"
                   >
-                    RETAKE SCAN
+                    CANCEL
+                  </button>
+                  <button
+                    onClick={handleSelfieConfirm}
+                    className="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white font-action text-xl py-6 rounded-full shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all"
+                  >
+                    CONFIRM
                   </button>
                 </div>
               </div>
@@ -178,32 +177,27 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onCancel }) => {
               />
             </div>
 
-            <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="pt-8 flex gap-4 justify-between">
               <button
                 onClick={() => setStep(2)}
-                className="flex items-center gap-2 text-gray-500 font-bold uppercase tracking-widest text-sm hover:text-gray-700 transition-colors"
+                className="flex-1 bg-gradient-to-r from-vibez-blue to-vibez-purple text-white font-action text-xl py-6 rounded-full shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all"
               >
-                <ArrowLeft className="w-5 h-5" />
-                BACK TO SELFIE
+                BACK
               </button>
-
-              <div className="flex gap-4">
-                <button
-                  onClick={handleSkipStrengths}
-                  disabled={isUploading}
-                  className="px-8 py-4 text-gray-600 font-action text-lg uppercase tracking-wider hover:text-gray-800 transition-colors disabled:opacity-50"
-                >
-                  SKIP FOR NOW
-                </button>
-                <button
-                  onClick={() => setStep(4)}
-                  disabled={isUploading}
-                  className="bg-gradient-to-r from-vibez-blue to-vibez-purple text-white font-action text-xl px-12 py-5 rounded-full shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                >
-                  CONFIRM
-                  <ArrowRight className="w-6 h-6" />
-                </button>
-              </div>
+              <button
+                onClick={handleSkipStrengths}
+                disabled={isUploading}
+                className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white font-action text-xl py-6 rounded-full shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
+              >
+                SKIP
+              </button>
+              <button
+                onClick={() => setStep(4)}
+                disabled={isUploading}
+                className="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white font-action text-xl py-6 rounded-full shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                CONFIRM
+              </button>
             </div>
           </div>
         )}
@@ -222,57 +216,50 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onCancel }) => {
                 value={story}
                 onChange={(e) => {
                   const value = e.target.value;
-                  if (value.length <= 144) {
+                  if (value.length <= 256) {
                     setStory(value);
                   }
                 }}
                 placeholder="Tell your origin story..."
                 className="w-full h-48 p-4 bg-white border-2 border-gray-200 rounded-xl focus:border-vibez-blue focus:outline-none resize-none text-gray-700 font-comic text-lg transition-colors"
-                maxLength={144}
+                maxLength={256}
               />
               <div className="flex justify-between items-center mt-2">
-                <span className="text-sm text-gray-500">Maximum 144 characters</span>
-                <span className={`font-action text-sm ${story.length >= 144 ? 'text-vibez-purple' : 'text-gray-500'}`}>
-                  {story.length} / 144
+                <span className="text-sm text-gray-500">Maximum 256 characters</span>
+                <span className={`font-action text-sm ${story.length >= 256 ? 'text-vibez-purple' : 'text-gray-500'}`}>
+                  {story.length} / 256
                 </span>
               </div>
             </div>
 
-            <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="pt-8 flex gap-4 justify-between">
               <button
                 onClick={() => setStep(3)}
-                className="flex items-center gap-2 text-gray-500 font-bold uppercase tracking-widest text-sm hover:text-gray-700 transition-colors"
+                className="flex-1 bg-gradient-to-r from-vibez-blue to-vibez-purple text-white font-action text-xl py-6 rounded-full shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all"
               >
-                <ArrowLeft className="w-5 h-5" />
-                BACK TO SUPER POWERS
+                BACK
               </button>
-
-              <div className="flex gap-4">
-                <button
-                  onClick={handleSkipStory}
-                  disabled={isUploading}
-                  className="px-8 py-4 text-gray-600 font-action text-lg uppercase tracking-wider hover:text-gray-800 transition-colors disabled:opacity-50"
-                >
-                  SKIP FOR NOW
-                </button>
-                <button
-                  onClick={handleFinish}
-                  disabled={isUploading}
-                  className="bg-gradient-to-r from-vibez-blue to-vibez-purple text-white font-action text-xl px-12 py-5 rounded-full shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                >
-                  {isUploading ? (
-                    <>
-                      <Loader2 className="w-6 h-6 animate-spin" />
-                      SAVING...
-                    </>
-                  ) : (
-                    <>
-                      CONFIRM
-                      <ArrowRight className="w-6 h-6" />
-                    </>
-                  )}
-                </button>
-              </div>
+              <button
+                onClick={handleSkipStory}
+                disabled={isUploading}
+                className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white font-action text-xl py-6 rounded-full shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
+              >
+                SKIP
+              </button>
+              <button
+                onClick={handleFinish}
+                disabled={isUploading}
+                className="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white font-action text-xl py-6 rounded-full shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isUploading ? (
+                  <>
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                    SAVING...
+                  </>
+                ) : (
+                  'CONFIRM'
+                )}
+              </button>
             </div>
           </div>
         )}

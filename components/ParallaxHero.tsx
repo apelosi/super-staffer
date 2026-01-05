@@ -57,9 +57,9 @@ const ParallaxHero: React.FC<ParallaxHeroProps> = ({ onStart }) => {
           // Alternate between hero and villain
           const alignment = index % 2 === 0 ? 'hero' : 'villain';
 
-          // MUCH MORE VARIED parallax speeds - huge differences between characters
-          // Range from -2100 to +2100 with very different speeds
-          const speeds = [950, -2100, 1350, -1750, 1850, -1250, 1150, -1950, 1550, -1450, 1750, -1100];
+          // EXTREME VARIANCE in parallax speeds - no two characters should move similarly
+          // Range from -2400 to +2400 with maximum differences
+          const speeds = [800, -2400, 1600, -1900, 2200, -1100, 1300, -2100, 1900, -1400, 2400, -800];
           const parallaxSpeed = speeds[index];
           const y = useTransform(scrollYProgress, [0, 0.5], [0, parallaxSpeed]);
 
@@ -321,14 +321,15 @@ const ParallaxHero: React.FC<ParallaxHeroProps> = ({ onStart }) => {
 
                 // Characters that moved DOWN in banner now come FROM TOP
                 // Characters that moved UP in banner now come FROM BOTTOM
-                // Using different scroll range for this section
-                const speeds = [950, -2100, 1350, -1750, 1850, -1250, 1150, -1950, 1550, -1450, 1750, -1100];
+                // Using same speeds as banner for consistency
+                const speeds = [800, -2400, 1600, -1900, 2200, -1100, 1300, -2100, 1900, -1400, 2400, -800];
                 const originalSpeed = speeds[index];
 
-                // Reverse direction: if it went down (positive), start from top (negative offset)
-                // if it went up (negative), start from bottom (positive offset)
-                const reverseSpeed = -originalSpeed * 0.8; // Slightly slower return
-                const y2 = useTransform(scrollYProgress, [0.4, 1], [originalSpeed * 0.5, originalSpeed * 0.5 + reverseSpeed]);
+                // Reverse direction with MORE dramatic effect
+                // Positive speeds (moved down) now come from way above (large negative start)
+                // Negative speeds (moved up) now come from way below (large positive start)
+                const reverseSpeed = -originalSpeed * 1.2; // More dramatic reversal
+                const y2 = useTransform(scrollYProgress, [0.35, 1], [originalSpeed * 0.6, originalSpeed * 0.6 + reverseSpeed]);
 
                 const reorderedIndex = [0, 2, 4, 6, 8, 10, 1, 3, 5, 7, 9, 11][index];
                 const positions = [

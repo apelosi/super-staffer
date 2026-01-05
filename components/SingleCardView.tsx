@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import TradingCard from './TradingCard';
 import { CardData, User } from '../types';
-import { ArrowLeft, Download, Trash2, Lock, Unlock, Link as LinkIcon, Check, Loader2, Sparkles } from 'lucide-react';
+import { ArrowLeft, Download, Trash2, Lock, Unlock, Link as LinkIcon, Check, Loader2, Sparkles, RefreshCw } from 'lucide-react';
 import { VIBEZ_LOGO_SVG } from '../constants';
 import Layout from './Layout';
 
@@ -26,10 +26,19 @@ const SingleCardView: React.FC<SingleCardViewProps> = ({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isFlipped, setIsFlipped] = useState(false);
 
   const handleDownload = async () => {
     setIsDownloading(true);
     try {
+      // If viewing the back (flipped state), just show alert for now
+      // In future, we could render the back side to canvas
+      if (isFlipped) {
+        alert('Back side download coming soon! For now, please flip to front to download.');
+        setIsDownloading(false);
+        return;
+      }
+
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
@@ -182,28 +191,37 @@ const SingleCardView: React.FC<SingleCardViewProps> = ({
           <ArrowLeft className="w-6 h-6 text-gray-700" />
         </button>
 
-        <div className="max-w-6xl mx-auto space-y-8">
-          {/* Cards Row */}
-          <div className="grid lg:grid-cols-2 gap-2 items-start">
-            {/* Card Front */}
+        <div className="max-w-2xl mx-auto space-y-8">
+          {/* Flip Card Container */}
+          <div className="relative flex justify-center" style={{ perspective: '1000px' }}>
+            {/* Animated Card Container */}
             <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="flex justify-center"
+              className="w-full max-w-sm relative"
+              animate={{ rotateY: isFlipped ? 180 : 0 }}
+              transition={{ duration: 0.6, ease: 'easeInOut' }}
+              style={{ transformStyle: 'preserve-3d' }}
             >
-              <div className="w-full max-w-sm">
+              {/* Card Front */}
+              <div
+                className="w-full"
+                style={{
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden'
+                }}
+              >
                 <TradingCard card={card} variant="preview" />
               </div>
-            </motion.div>
 
-            {/* Card Back */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-              className="flex justify-center"
-            >
-              <div className="w-full max-w-sm">
+              {/* Card Back */}
+              <div
+                className="w-full absolute top-0 left-0"
+                style={{
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden',
+                  transform: 'rotateY(180deg)'
+                }}
+              >
+                <div className="w-full max-w-sm">
                 <div className="group relative aspect-[2.5/3.5] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 shadow-2xl transition-transform duration-300 hover:scale-[1.02] overflow-hidden">
                   {/* Decorative Background Pattern */}
                   <div className="absolute inset-0 opacity-10">
@@ -232,11 +250,9 @@ const SingleCardView: React.FC<SingleCardViewProps> = ({
                         <div dangerouslySetInnerHTML={{ __html: VIBEZ_LOGO_SVG }} />
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <div className="h-px w-8 bg-gradient-to-r from-transparent to-vibez-blue" />
                         <span className="font-action text-[10px] text-white/60 uppercase tracking-widest">
-                          ss.vibez.ventures
+                          SUPER STAFFERS
                         </span>
-                        <div className="h-px w-8 bg-gradient-to-l from-transparent to-vibez-purple" />
                       </div>
                       <span className="font-action text-[10px] text-white/60 uppercase tracking-wider">
                         #{card.id.slice(0, 6)}
@@ -252,88 +268,97 @@ const SingleCardView: React.FC<SingleCardViewProps> = ({
                       </div>
                     </div>
 
-                    {/* Stats Section - Optimized Layout */}
-                    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-2 mb-3 border border-white/20">
-                      <div className="grid grid-cols-3 gap-2">
-                        {/* Theme - Takes 2 columns */}
-                        <div className="bg-black/20 rounded p-2 border border-white/10 col-span-2">
-                          <div className="text-[9px] text-white/60 uppercase tracking-wide mb-0.5">Theme</div>
+                    {/* Stats Section - Theme wider, Alignment and Created narrower */}
+                    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-1.5 mb-2 border border-white/20">
+                      <div className="grid grid-cols-[2fr_1fr_1fr] gap-1.5">
+                        {/* Theme */}
+                        <div className="bg-black/20 rounded p-1.5 border border-white/10">
+                          <div className="text-[8px] text-white/60 uppercase tracking-wide mb-0.5">Theme</div>
                           <div className="font-action text-xs text-white leading-tight">{card.theme}</div>
                         </div>
-                        {/* Alignment & Created - Stacked in 1 column */}
-                        <div className="flex flex-col gap-2">
-                          <div className="bg-black/20 rounded p-2 border border-white/10">
-                            <div className="text-[9px] text-white/60 uppercase tracking-wide mb-0.5">Alignment</div>
-                            <div className={`font-action text-xs leading-tight ${
-                              card.alignment === 'Hero' ? 'text-cyan-400' : 'text-red-400'
-                            }`}>
-                              {card.alignment}
-                            </div>
+                        {/* Alignment */}
+                        <div className="bg-black/20 rounded p-1.5 border border-white/10">
+                          <div className="text-[8px] text-white/60 uppercase tracking-wide mb-0.5">Alignment</div>
+                          <div className={`font-action text-xs leading-tight ${
+                            card.alignment === 'Hero' ? 'text-cyan-400' : 'text-red-400'
+                          }`}>
+                            {card.alignment}
                           </div>
-                          <div className="bg-black/20 rounded p-2 border border-white/10">
-                            <div className="text-[9px] text-white/60 uppercase tracking-wide mb-0.5">Created</div>
-                            <div className="font-comic text-[10px] text-white/80 leading-tight">{new Date(card.timestamp).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</div>
-                          </div>
+                        </div>
+                        {/* Created */}
+                        <div className="bg-black/20 rounded p-1.5 border border-white/10">
+                          <div className="text-[8px] text-white/60 uppercase tracking-wide mb-0.5">Created</div>
+                          <div className="font-comic text-xs text-white/80 leading-tight">{new Date(card.timestamp).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</div>
                         </div>
                       </div>
                     </div>
 
                     {/* Super Powers Section - Compact with more room */}
-                    <div className="flex-1 bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20 overflow-y-auto">
-                      <div className="flex items-center gap-1.5 mb-2">
+                    <div className="flex-1 bg-white/10 backdrop-blur-sm rounded-lg p-2.5 border border-white/20 overflow-hidden">
+                      <div className="flex items-center gap-1.5 mb-1.5">
                         <div className="h-px flex-1 bg-gradient-to-r from-transparent via-vibez-blue to-transparent" />
-                        <h2 className="font-action text-sm text-white uppercase tracking-wide">
+                        <h2 className="font-action text-xs text-white uppercase tracking-wide">
                           Super Powers
                         </h2>
                         <div className="h-px flex-1 bg-gradient-to-r from-transparent via-vibez-purple to-transparent" />
                       </div>
 
-                      <div className="space-y-1.5">
+                      <div className="space-y-1">
                         {user?.strengths && user.strengths.length > 0 ? (
                           user.strengths.map((strength: string, index: number) => (
                             <div
                               key={index}
-                              className="flex items-center gap-1.5 bg-black/30 border border-white/10 rounded px-2 py-1.5"
+                              className="flex items-center gap-1.5 bg-black/30 border border-white/10 rounded px-2 py-1"
                             >
                               <Sparkles className="w-3 h-3 text-vibez-blue flex-shrink-0" />
                               <span className="font-comic text-xs text-white/90 leading-tight">{strength}</span>
                             </div>
                           ))
                         ) : (
-                          <p className="font-comic text-white/40 text-xs italic text-center py-2">
+                          <p className="font-comic text-white/40 text-xs italic text-center py-1">
                             No super powers specified
                           </p>
                         )}
                       </div>
 
                       {/* Origin Story */}
-                      <div className="mt-3 pt-3 border-t border-white/20">
-                        <div className="flex items-center gap-1.5 mb-2">
+                      <div className="mt-2 pt-2 border-t border-white/20">
+                        <div className="flex items-center gap-1.5 mb-1.5">
                           <div className="h-px flex-1 bg-gradient-to-r from-transparent via-vibez-purple to-transparent" />
-                          <h2 className="font-action text-sm text-white uppercase tracking-wide">
+                          <h2 className="font-action text-xs text-white uppercase tracking-wide">
                             Origin Story
                           </h2>
                           <div className="h-px flex-1 bg-gradient-to-r from-transparent via-vibez-blue to-transparent" />
                         </div>
                         {user?.story && user.story.trim() ? (
-                          <p className="font-comic text-white/90 text-xs leading-relaxed">
+                          <p className="font-comic font-normal text-white/90 text-[11px] leading-snug">
                             {user.story}
                           </p>
                         ) : (
-                          <p className="font-comic text-white/40 text-xs italic text-center py-2">
+                          <p className="font-comic text-white/40 text-xs italic text-center py-1">
                             No origin story specified
                           </p>
                         )}
                       </div>
                     </div>
 
+                    {/* Footer Section */}
+                    <div className="flex items-center justify-center gap-1.5 mt-3">
+                      <div className="h-px flex-1 bg-gradient-to-r from-transparent via-vibez-blue to-vibez-blue/50" />
+                      <span className="font-action text-[10px] text-white/60 uppercase tracking-widest">
+                        ss.vibez.ventures
+                      </span>
+                      <div className="h-px flex-1 bg-gradient-to-l from-transparent via-vibez-purple to-vibez-purple/50" />
+                    </div>
+
                   </div>
+                </div>
                 </div>
               </div>
             </motion.div>
           </div>
 
-          {/* Actions / CTA Section - Always below both cards */}
+          {/* Actions / CTA Section - Always below card */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -342,24 +367,53 @@ const SingleCardView: React.FC<SingleCardViewProps> = ({
             {/* Owner Actions */}
             {isOwner ? (
               <div className="max-w-md mx-auto space-y-4">
-                  {/* Download Button */}
-                  <button
-                    onClick={handleDownload}
-                    disabled={isDownloading}
-                    className="w-full bg-gradient-to-r from-vibez-blue to-vibez-purple text-white font-action text-xl py-5 rounded-2xl shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isDownloading ? (
-                      <>
-                        <Loader2 className="w-6 h-6 animate-spin" />
-                        DOWNLOADING...
-                      </>
-                    ) : (
-                      <>
-                        <Download className="w-6 h-6" />
-                        DOWNLOAD CARD
-                      </>
-                    )}
-                  </button>
+                  {/* Flip and Download Buttons - Side by Side */}
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Flip Button */}
+                    <motion.button
+                      onClick={() => setIsFlipped(!isFlipped)}
+                      className="flex items-center justify-center gap-2 px-6 py-5 bg-gradient-to-r from-vibez-blue to-vibez-purple text-white font-action text-xl rounded-2xl shadow-lg hover:shadow-xl transition-all"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      animate={{
+                        boxShadow: [
+                          '0 10px 25px rgba(0, 180, 216, 0.3)',
+                          '0 10px 35px rgba(114, 9, 183, 0.5)',
+                          '0 10px 25px rgba(0, 180, 216, 0.3)'
+                        ]
+                      }}
+                      transition={{
+                        boxShadow: { duration: 2, repeat: Infinity, ease: 'easeInOut' }
+                      }}
+                    >
+                      <motion.div
+                        animate={{ rotate: isFlipped ? 180 : 0 }}
+                        transition={{ duration: 0.6 }}
+                      >
+                        <RefreshCw className="w-6 h-6" />
+                      </motion.div>
+                      <span>FLIP</span>
+                    </motion.button>
+
+                    {/* Download Button */}
+                    <button
+                      onClick={handleDownload}
+                      disabled={isDownloading}
+                      className="flex items-center justify-center gap-2 px-6 py-5 bg-gradient-to-r from-vibez-blue to-vibez-purple text-white font-action text-xl rounded-2xl shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isDownloading ? (
+                        <>
+                          <Loader2 className="w-6 h-6 animate-spin" />
+                          DOWNLOADING...
+                        </>
+                      ) : (
+                        <>
+                          <Download className="w-6 h-6" />
+                          DOWNLOAD
+                        </>
+                      )}
+                    </button>
+                  </div>
 
                   {/* Visibility Toggle */}
                   <button
@@ -448,20 +502,49 @@ const SingleCardView: React.FC<SingleCardViewProps> = ({
                   )}
                 </div>
               ) : (
-                /* Non-Owner CTA */
-                <div className="max-w-md mx-auto bg-gradient-to-br from-vibez-blue to-vibez-purple rounded-3xl p-8 shadow-lg text-center">
-                  <h2 className="font-action text-3xl text-white mb-3">
-                    CREATE YOUR OWN CARD
-                  </h2>
-                  <p className="font-comic text-lg text-white/90 mb-6">
-                    Join the Super Staffers and transform yourself into a superhero!
-                  </p>
-                  <a
-                    href="/"
-                    className="inline-block bg-white text-vibez-blue font-action text-xl px-8 py-4 rounded-full hover:shadow-xl hover:scale-105 active:scale-95 transition-all"
+                /* Non-Owner Actions */
+                <div className="max-w-md mx-auto space-y-4">
+                  {/* Flip Button for Public Viewers */}
+                  <motion.button
+                    onClick={() => setIsFlipped(!isFlipped)}
+                    className="w-full flex items-center justify-center gap-2 px-6 py-5 bg-gradient-to-r from-vibez-blue to-vibez-purple text-white font-action text-xl rounded-2xl shadow-lg hover:shadow-xl transition-all"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    animate={{
+                      boxShadow: [
+                        '0 10px 25px rgba(0, 180, 216, 0.3)',
+                        '0 10px 35px rgba(114, 9, 183, 0.5)',
+                        '0 10px 25px rgba(0, 180, 216, 0.3)'
+                      ]
+                    }}
+                    transition={{
+                      boxShadow: { duration: 2, repeat: Infinity, ease: 'easeInOut' }
+                    }}
                   >
-                    GET STARTED
-                  </a>
+                    <motion.div
+                      animate={{ rotate: isFlipped ? 180 : 0 }}
+                      transition={{ duration: 0.6 }}
+                    >
+                      <RefreshCw className="w-6 h-6" />
+                    </motion.div>
+                    <span>FLIP</span>
+                  </motion.button>
+
+                  {/* CTA Card */}
+                  <div className="bg-gradient-to-br from-vibez-blue to-vibez-purple rounded-3xl p-8 shadow-lg text-center">
+                    <h2 className="font-action text-3xl text-white mb-3">
+                      CREATE YOUR OWN CARD
+                    </h2>
+                    <p className="font-comic text-lg text-white/90 mb-6">
+                      Join the Super Staffers and transform yourself into a superhero!
+                    </p>
+                    <a
+                      href="/"
+                      className="inline-block bg-white text-vibez-blue font-action text-xl px-8 py-4 rounded-full hover:shadow-xl hover:scale-105 active:scale-95 transition-all"
+                    >
+                      GET STARTED
+                    </a>
+                  </div>
                 </div>
               )}
           </motion.div>
