@@ -807,46 +807,90 @@ const SingleCardView: React.FC<SingleCardViewProps> = ({
               ) : (
                 /* Non-Owner Actions */
                 <div className="max-w-md mx-auto space-y-4">
-                  {/* Flip Button for Public Viewers */}
-                  <motion.button
-                    onClick={() => setIsFlipped(!isFlipped)}
-                    className="w-full flex items-center justify-center gap-2 px-6 py-5 bg-gradient-to-r from-vibez-blue to-vibez-purple text-white font-action text-xl rounded-2xl shadow-lg hover:shadow-xl transition-all"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    animate={{
-                      boxShadow: [
-                        '0 10px 25px rgba(0, 180, 216, 0.3)',
-                        '0 10px 35px rgba(114, 9, 183, 0.5)',
-                        '0 10px 25px rgba(0, 180, 216, 0.3)'
-                      ]
-                    }}
-                    transition={{
-                      boxShadow: { duration: 2, repeat: Infinity, ease: 'easeInOut' }
-                    }}
-                  >
-                    <motion.div
-                      animate={{ rotate: isFlipped ? 180 : 0 }}
-                      transition={{ duration: 0.6 }}
+                  {/* Flip and Download Buttons - Side by Side */}
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Flip Button */}
+                    <motion.button
+                      onClick={() => setIsFlipped(!isFlipped)}
+                      className="flex items-center justify-center gap-2 px-6 py-5 bg-gradient-to-r from-vibez-blue to-vibez-purple text-white font-action text-xl rounded-2xl shadow-lg hover:shadow-xl transition-all"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      animate={{
+                        boxShadow: [
+                          '0 10px 25px rgba(0, 180, 216, 0.3)',
+                          '0 10px 35px rgba(114, 9, 183, 0.5)',
+                          '0 10px 25px rgba(0, 180, 216, 0.3)'
+                        ]
+                      }}
+                      transition={{
+                        boxShadow: { duration: 2, repeat: Infinity, ease: 'easeInOut' }
+                      }}
                     >
-                      <RefreshCw className="w-6 h-6" />
-                    </motion.div>
-                    <span>FLIP</span>
-                  </motion.button>
+                      <motion.div
+                        animate={{ rotate: isFlipped ? 180 : 0 }}
+                        transition={{ duration: 0.6 }}
+                      >
+                        <RefreshCw className="w-6 h-6" />
+                      </motion.div>
+                      <span>FLIP</span>
+                    </motion.button>
 
-                  {/* CTA Card */}
-                  <div className="bg-gradient-to-br from-vibez-blue to-vibez-purple rounded-3xl p-8 shadow-lg text-center">
-                    <h2 className="font-action text-3xl text-white mb-3">
-                      CREATE YOUR OWN CARD
-                    </h2>
-                    <p className="font-comic text-lg text-white/90 mb-6">
-                      Join the Super Staffers and transform yourself into a superhero!
-                    </p>
-                    <a
-                      href="/"
-                      className="inline-block bg-white text-vibez-blue font-action text-xl px-8 py-4 rounded-full hover:shadow-xl hover:scale-105 active:scale-95 transition-all"
+                    {/* Download Button */}
+                    <button
+                      onClick={handleDownload}
+                      disabled={isDownloading}
+                      className="flex items-center justify-center gap-2 px-6 py-5 bg-gradient-to-r from-vibez-blue to-vibez-purple text-white font-action text-xl rounded-2xl shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      GET STARTED
-                    </a>
+                      {isDownloading ? (
+                        <>
+                          <Loader2 className="w-6 h-6 animate-spin" />
+                          DOWNLOADING...
+                        </>
+                      ) : (
+                        <>
+                          <Download className="w-6 h-6" />
+                          DOWNLOAD
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {/* CTA Card - New Design */}
+                  <div className="relative rounded-3xl overflow-hidden shadow-xl">
+                    {/* Animated Background */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" />
+                    <div className="absolute inset-0 opacity-20">
+                      <div className="absolute inset-0" style={{
+                        backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,180,216,0.3) 10px, rgba(0,180,216,0.3) 20px)`
+                      }} />
+                    </div>
+
+                    {/* Decorative Corner Accents */}
+                    <div className="absolute top-0 left-0 w-16 h-16 border-t-4 border-l-4 border-vibez-blue opacity-60" />
+                    <div className="absolute top-0 right-0 w-16 h-16 border-t-4 border-r-4 border-vibez-purple opacity-60" />
+                    <div className="absolute bottom-0 left-0 w-16 h-16 border-b-4 border-l-4 border-vibez-purple opacity-60" />
+                    <div className="absolute bottom-0 right-0 w-16 h-16 border-b-4 border-r-4 border-vibez-blue opacity-60" />
+
+                    {/* Content */}
+                    <div className="relative p-8 text-center border-2 border-white/20">
+                      <div className="mb-3 flex items-center justify-center">
+                        <Sparkles className="w-8 h-8 text-vibez-blue animate-pulse" />
+                      </div>
+                      <h2 className="font-action text-3xl text-white mb-3 bg-clip-text text-transparent bg-gradient-to-r from-vibez-blue to-vibez-purple" style={{
+                        WebkitTextFillColor: 'white'
+                      }}>
+                        CREATE YOUR CARDS
+                      </h2>
+                      <p className="font-comic text-lg text-white/90 mb-6">
+                        Join the Super Staffers and to create and share your own cards!
+                      </p>
+                      <a
+                        href="/"
+                        className="inline-block bg-gradient-to-r from-vibez-blue to-vibez-purple text-white font-action text-xl px-10 py-4 rounded-full hover:shadow-2xl hover:scale-105 active:scale-95 transition-all border-2 border-white/30"
+                      >
+                        GET STARTED
+                      </a>
+                    </div>
                   </div>
                 </div>
               )}

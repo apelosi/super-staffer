@@ -79,8 +79,8 @@ const Dashboard: React.FC<DashboardProps> = ({
       <main className="container mx-auto px-6 py-12">
         {/* Welcome Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-6xl font-action mb-4 bg-clip-text text-transparent bg-gradient-to-r from-vibez-blue to-vibez-purple">
-            WELCOME, {user.name.toUpperCase()}
+          <h1 className="text-3xl md:text-5xl font-action mb-4 bg-clip-text text-transparent bg-gradient-to-r from-vibez-blue to-vibez-purple">
+            HELLO, {user.name.toUpperCase()}
           </h1>
           <p className="text-gray-600 text-lg font-comic">
             {cards.length === 0
