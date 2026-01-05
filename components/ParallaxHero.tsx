@@ -57,11 +57,11 @@ const ParallaxHero: React.FC<ParallaxHeroProps> = ({ onStart }) => {
           // Alternate between hero and villain
           const alignment = index % 2 === 0 ? 'hero' : 'villain';
 
-          // EXTREME parallax speeds - minimum 900, maximum 1800 (2x variation)
-          // Mixed order so variety on mobile (reordered themes array below)
-          const speeds = [900, -1800, 1200, -1600, 1500, -1400, 1100, -1700, 1300, -1500, 1400, -1300];
+          // MUCH MORE VARIED parallax speeds - huge differences between characters
+          // Range from -2100 to +2100 with very different speeds
+          const speeds = [950, -2100, 1350, -1750, 1850, -1250, 1150, -1950, 1550, -1450, 1750, -1100];
           const parallaxSpeed = speeds[index];
-          const y = useTransform(scrollYProgress, [0, 0.6], [0, parallaxSpeed]);
+          const y = useTransform(scrollYProgress, [0, 0.5], [0, parallaxSpeed]);
 
           // FIXED horizontal positions in pixels (like a wallpaper)
           // Reordered for mobile variety - avoid stacking similar characters
@@ -314,10 +314,66 @@ const ParallaxHero: React.FC<ParallaxHeroProps> = ({ onStart }) => {
 
           {/* Super Powers Section - Character Strengths Wallpaper */}
           <section className="relative py-20 md:py-32 overflow-hidden">
+            {/* Superheroes returning from opposite directions */}
+            <div className="absolute left-1/2 -translate-x-1/2 pointer-events-none" style={{ height: '100%', width: '1600px', zIndex: 1 }}>
+              {THEMES.map((theme, index) => {
+                const alignment = index % 2 === 0 ? 'hero' : 'villain';
+
+                // Characters that moved DOWN in banner now come FROM TOP
+                // Characters that moved UP in banner now come FROM BOTTOM
+                // Using different scroll range for this section
+                const speeds = [950, -2100, 1350, -1750, 1850, -1250, 1150, -1950, 1550, -1450, 1750, -1100];
+                const originalSpeed = speeds[index];
+
+                // Reverse direction: if it went down (positive), start from top (negative offset)
+                // if it went up (negative), start from bottom (positive offset)
+                const reverseSpeed = -originalSpeed * 0.8; // Slightly slower return
+                const y2 = useTransform(scrollYProgress, [0.4, 1], [originalSpeed * 0.5, originalSpeed * 0.5 + reverseSpeed]);
+
+                const reorderedIndex = [0, 2, 4, 6, 8, 10, 1, 3, 5, 7, 9, 11][index];
+                const positions = [
+                  { left: '0px', top: '5%', rotate: -8 },
+                  { left: '267px', top: '12%', rotate: 12 },
+                  { left: '534px', top: '18%', rotate: -10 },
+                  { left: '801px', top: '8%', rotate: 14 },
+                  { left: '1068px', top: '15%', rotate: -12 },
+                  { left: '1335px', top: '10%', rotate: 10 },
+                  { left: '0px', top: '65%', rotate: -14 },
+                  { left: '267px', top: '72%', rotate: 8 },
+                  { left: '534px', top: '68%', rotate: -9 },
+                  { left: '801px', top: '75%', rotate: 11 },
+                  { left: '1068px', top: '70%', rotate: -13 },
+                  { left: '1335px', top: '78%', rotate: 9 },
+                ];
+                const position = positions[reorderedIndex];
+
+                return (
+                  <motion.div
+                    key={`superhero-powers-${theme.id}`}
+                    className="absolute"
+                    style={{
+                      top: position.top,
+                      left: position.left,
+                      y: y2,
+                      width: '280px',
+                      height: 'auto',
+                      transform: `rotate(${position.rotate}deg)`,
+                    }}
+                  >
+                    <img
+                      src={`/ss-${theme.id}-${alignment}.png`}
+                      alt=""
+                      className="w-full h-auto object-contain drop-shadow-2xl"
+                    />
+                  </motion.div>
+                );
+              })}
+            </div>
+
             {/* Radial Burst Gradient Background - matching hero section */}
             <div className="absolute inset-0 bg-gradient-radial from-white via-vibez-blue/30 to-vibez-purple/40" />
             <div className="absolute inset-0 bg-gradient-to-br from-vibez-blue/20 via-transparent to-vibez-purple/20" />
-            <div className="container mx-auto px-6">
+            <div className="container mx-auto px-6 relative z-10">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
