@@ -30,38 +30,14 @@ export default async (req: Request) => {
         const ai = new GoogleGenAI({ apiKey });
         const model = "gemini-2.5-flash-image"; // Using the flash model as requested
 
-        const prompt = `[Style: Masterpiece Comic Book Art, ${theme} Aesthetic, Classic 1990s Trading Card Style (Marvel Universe Series III 1992)]
-[Subject: Person from uploaded image in ${alignment} role]
+        const prompt = `[Style: Masterpiece Comic Book Art, ${theme} Aesthetic]
+[Subject: ${alignment === 'Hero' ? 'Superhero' : 'Supervillain'}]
 [Action: Dynamic action pose with dramatic energy effects]
-[Character Reference: EXACT face from uploaded image - do not idealize or superhero-ize the face]
+[Character Reference: Match the face of the uploaded image]
 
-ARTISTIC STYLE - 1990s Comic Book Illustration:
-- Bold, clean ink outlines on all elements (character, costume, background)
-- Traditional comic book cell-shading with vibrant, saturated colors
-- Comic book illustration style (NOT photorealistic)
-- Hand-drawn comic book art aesthetic
+Behind the character's torso: A rectangular "window" or portal frame containing Marina Bay Sands hotel in Singapore (three towers with skypark boat on top) as illustrated scenic backdrop.
 
-THE PERSON'S FACE (CRITICAL - READ CAREFULLY):
-- Draw the ACTUAL person's face from the photo in comic book style
-- DO NOT make the face look like a generic superhero/supervillain face
-- DO NOT idealize, beautify, or alter facial features to look more heroic
-- Preserve the REAL nose size and shape from the photo (not a smaller superhero nose)
-- Preserve the REAL face shape, bone structure, eye shape, lip shape from the photo
-- Keep the person's actual skin tone, hair color, hairstyle, and facial expression
-- The face should look like: "This exact person drawn in comic book style" NOT "A superhero who vaguely resembles this person"
-- Render face in comic book illustration style while keeping it recognizably this specific person
-
-COMPOSITION:
-1. Character in dynamic action pose, face clearly visible (forward or 3/4 angle)
-2. Background: Deep cosmic space/nebula with stars (illustrated, not photographic)
-3. Behind the character's torso: A rectangular "window" or portal frame containing Marina Bay Sands hotel in Singapore (three towers with skypark boat on top) as illustrated scenic backdrop
-
-COSTUME AND POWERS:
-- ${theme} themed costume and powers
-- ${alignment} role (heroic or villainous aesthetic)
-- Marina Bay Sands must be illustrated/stylized, not a photograph
-- No text, logos, or symbols anywhere on the image
-- No border or frame on outer image edges - fills canvas edge-to-edge`;
+No text, logos, or symbols on the image.`;
 
         const response = await ai.models.generateContent({
             model: model,
