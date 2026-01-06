@@ -28,7 +28,7 @@ export default async (req: Request) => {
         const cleanBase64 = image.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, '');
 
         const ai = new GoogleGenAI({ apiKey });
-        const model = "gemini-2.5-flash-image"; // Using the flash model as requested
+        const model = "gemini-3-pro-image-preview"; // Using Flash 3 (same as working app)
 
         const prompt = `Describe the physical appearance of the person in this photo briefly but precisely (gender, hair color/style, skin tone, facial features, glasses/beard if any). Do not describe the background or clothing.
 
