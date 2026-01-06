@@ -138,7 +138,7 @@ const TradingCard: React.FC<TradingCardProps> = ({ card, user, onDelete, variant
       {/* Card Visuals - Sharp corners, no border, image bleeds to edges */}
       <div
         ref={cardRef}
-        className="relative aspect-[2.5/3.5] bg-white shadow-2xl transition-transform duration-300 transform group-hover:scale-[1.02] overflow-hidden"
+        className="relative aspect-[2.5/3.5] shadow-2xl transition-transform duration-300 transform group-hover:scale-[1.02] overflow-hidden"
       >
         {/* Main Image - covers entire card */}
         <img

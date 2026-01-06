@@ -43,7 +43,15 @@ export default async (req: Request) => {
       COMPOSITION:
       1. The character should be in a dramatic action pose. Ensure the face is clearly visible and facing forward or at a 3/4 angle for maximum recognizability.
       2. BACKGROUND: A deep cosmic space/nebula texture with stars, typical of 90s cosmic trading cards. IMPORTANT: The background must be illustrated/stylized, NOT a photograph of space.
-      3. CRITICAL - MARINA BAY SANDS PLACEMENT: Behind the character's torso/body (in the BACKGROUND, not foreground), there must be a distinct, rectangular "window" or portal frame. Inside this window ONLY, depict the Marina Bay Sands hotel in Singapore (three towers with the skypark boat on top) as a scenic backdrop. The Marina Bay Sands should be illustrated/stylized to match the comic book art style, NOT a photograph. The character should appear to be in FRONT of this window. Marina Bay Sands must NEVER appear in the foreground or anywhere except inside that background window.
+      3. CRITICAL - MARINA BAY SANDS PLACEMENT (READ CAREFULLY):
+         - The Marina Bay Sands building MUST ONLY appear in a SMALL rectangular "window" or "portal" in the DEEP BACKGROUND
+         - This window should be BEHIND the character's body/torso, appearing DISTANT and RECESSED
+         - The character MUST be in the FOREGROUND, fully in front of everything else
+         - Marina Bay Sands CANNOT touch the character, CANNOT overlap the character, and CANNOT appear in front of the character
+         - The building must be SMALL relative to the character (like looking through a distant window)
+         - Marina Bay Sands must be stylized/illustrated to match comic book art style, NOT a photograph
+         - ABSOLUTE CONSTRAINT: If the Marina Bay Sands would appear in the foreground or overlap the character, DO NOT include it at all
+         - The character's body should NEVER be behind or inside Marina Bay Sands - the character is ALWAYS in front
 
       STYLE DETAILS:
       - Vibrant, saturated colors for costume, powers, and background
@@ -66,9 +74,10 @@ export default async (req: Request) => {
       FINAL REMINDER:
       1. COMIC BOOK DRAWING FIDELITY is the top priority - this must look like a 1990s illustrated trading card.
       2. Within that comic book style, make the facial features recognizable as the person in the input photo.
-      3. Marina Bay Sands must be stylized/illustrated, NOT a photograph, and ONLY in the background window BEHIND the character.
+      3. Marina Bay Sands MUST be SMALL, DISTANT, and ONLY in a background window BEHIND the character - NEVER in foreground, NEVER overlapping character.
       4. DO NOT add ANY logos, symbols, or branding ANYWHERE on the image - the image must be clean with no logos.
       5. The result should be: "This is a comic book character that looks like [person's name]" - NOT "This is a photo of [person's name]".
+      6. Character is ALWAYS in the foreground. Marina Bay Sands is ALWAYS in the distant background window. NO exceptions.
     `;
 
         const response = await ai.models.generateContent({
