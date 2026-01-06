@@ -23,6 +23,7 @@ export default async (req: Request) => {
     const rows = await sql`
       SELECT * FROM cards
       WHERE clerk_id = ${clerkId}
+        AND active = TRUE
       ORDER BY timestamp DESC
     `;
 
@@ -33,7 +34,10 @@ export default async (req: Request) => {
       theme: row.theme,
       alignment: row.alignment,
       userName: row.user_name,
-      isPublic: row.is_public,
+      public: row.public,
+      active: row.active,
+      saveCount: row.save_count,
+      ownerClerkId: row.clerk_id,
     }));
 
     return new Response(

@@ -1,7 +1,7 @@
 import { neon } from '@neondatabase/serverless';
 
 /**
- * Netlify Function: Delete a card
+ * Netlify Function: Soft delete a card (sets active = FALSE)
  */
 export default async (req: Request) => {
   if (req.method !== 'POST') {
@@ -20,7 +20,12 @@ export default async (req: Request) => {
       );
     }
 
-    await sql`DELETE FROM cards WHERE id = ${cardId}`;
+    // Soft delete: set active = FALSE instead of hard delete
+    await sql`
+      UPDATE cards
+      SET active = FALSE
+      WHERE id = ${cardId}
+    `;
 
     return new Response(
       JSON.stringify({ success: true }),

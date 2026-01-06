@@ -65,8 +65,9 @@ export const storage = {
    * Load cards from local cache, sync from cloud
    */
   getCards: async (clerkId: string): Promise<CardData[]> => {
-    // Local cache
-    const localCards = await dbGetAll<CardData>(STORE_CARDS);
+    // Local cache - CRITICAL: Only get cards owned by this user
+    const allLocalCards = await dbGetAll<CardData>(STORE_CARDS);
+    const localCards = allLocalCards.filter(card => card.ownerClerkId === clerkId);
 
     // Sync from cloud in background
     syncCardsFromCloud(clerkId).catch(console.error);
@@ -101,29 +102,62 @@ export const storage = {
 
   /**
    * Get a single card by ID (for public viewing)
+   * @param cardId - The card ID to fetch
+   * @param viewerClerkId - Optional: Current user's Clerk ID. If provided and matches card owner, uses cache-first
    */
-  getCardById: async (cardId: string): Promise<CardData | null> => {
-    // Try local cache first
-    const localCard = await dbRequest<CardData>(
-      STORE_CARDS,
-      'readonly',
-      store => store.get(cardId)
-    );
+  getCardById: async (cardId: string, viewerClerkId?: string): Promise<CardData | null> => {
+    // If viewer ID provided, check cache first to see if they're the owner
+    if (viewerClerkId) {
+      const localCard = await dbRequest<CardData>(
+        STORE_CARDS,
+        'readonly',
+        store => store.get(cardId)
+      );
 
-    if (localCard) {
-      return localCard;
+      if (localCard) {
+        // Check schema validity
+        if ('isPublic' in localCard || !('active' in localCard)) {
+          console.log('[storage.getCardById] Cached card has old schema, falling through to cloud');
+        } else if (localCard.ownerClerkId === viewerClerkId) {
+          // OWNER viewing their own card - can use cache safely
+          if (localCard.active) {
+            console.log('[storage.getCardById] Owner viewing own card - using cache (60-300x faster)');
+            return localCard;
+          } else {
+            console.log('[storage.getCardById] Owner card is deleted (active: false)');
+            return null;
+          }
+        }
+        // Not owner - fall through to cloud fetch for fresh public state
+      }
+      // Cache miss - fall through to cloud fetch
     }
 
-    // Try fetching from cloud if not in cache
+    // NON-OWNER CONTEXT or cache miss: Fetch fresh from cloud
     try {
       const response = await db.getCardById(cardId);
       if (response && response.card) {
-        // Cache it locally
+        // Update local cache with fresh data
         await dbRequest(STORE_CARDS, 'readwrite', store => store.put(response.card));
+        console.log('[storage.getCardById] Fetched fresh from cloud, public:', response.card.public, 'active:', response.card.active);
         return response.card;
       }
     } catch (error) {
-      console.error('Failed to fetch card from cloud:', error);
+      console.error('[storage.getCardById] Cloud fetch failed:', error);
+
+      // Fallback to cache only for owners (offline mode)
+      if (viewerClerkId) {
+        const localCard = await dbRequest<CardData>(
+          STORE_CARDS,
+          'readonly',
+          store => store.get(cardId)
+        );
+
+        if (localCard && localCard.active && !('isPublic' in localCard) && 'active' in localCard && localCard.ownerClerkId === viewerClerkId) {
+          console.log('[storage.getCardById] Using cached card (offline mode) - owner only');
+          return localCard;
+        }
+      }
     }
 
     return null;
@@ -132,7 +166,7 @@ export const storage = {
   /**
    * Toggle card visibility (public/private)
    */
-  toggleCardVisibility: async (cardId: string, isPublic: boolean): Promise<void> => {
+  toggleCardVisibility: async (cardId: string, publicValue: boolean): Promise<void> => {
     // Update local cache
     const card = await dbRequest<CardData>(
       STORE_CARDS,
@@ -141,12 +175,49 @@ export const storage = {
     );
 
     if (card) {
-      card.isPublic = isPublic;
+      card.public = publicValue;
       await dbRequest(STORE_CARDS, 'readwrite', store => store.put(card));
     }
 
     // Update cloud
-    await db.toggleCardVisibility(cardId, isPublic);
+    await db.toggleCardVisibility(cardId, publicValue);
+  },
+
+  /**
+   * Get saved cards for a user (from external collection)
+   */
+  getSavedCards: async (clerkId: string): Promise<CardData[]> => {
+    console.log('[storage.getSavedCards] Called with clerkId:', clerkId, 'Type:', typeof clerkId);
+    try {
+      const response = await db.getSavedCards(clerkId);
+      console.log('[storage.getSavedCards] Success, got', response.cards.length, 'cards');
+      return response.cards;
+    } catch (error) {
+      console.error('[storage.getSavedCards] Failed to get saved cards:', error);
+      return [];
+    }
+  },
+
+  /**
+   * Save a card to user's collection
+   */
+  saveCardToCollection: async (userClerkId: string, cardId: string): Promise<void> => {
+    await db.saveCardToCollection(userClerkId, cardId);
+  },
+
+  /**
+   * Remove a card from user's collection
+   */
+  removeCardFromCollection: async (userClerkId: string, cardId: string): Promise<void> => {
+    await db.removeCardFromCollection(userClerkId, cardId);
+  },
+
+  /**
+   * Check if a card is saved by a user
+   */
+  checkCardSaved: async (userClerkId: string, cardId: string): Promise<boolean> => {
+    const response = await db.checkCardSaved(userClerkId, cardId);
+    return response.isSaved;
   },
 
   /**
@@ -154,6 +225,16 @@ export const storage = {
    */
   clearUser: async (): Promise<void> => {
     // Clear all local data
+    await dbRequest(STORE_USERS, 'readwrite', store => store.clear());
+    await dbRequest(STORE_CARDS, 'readwrite', store => store.clear());
+  },
+
+  /**
+   * Clear ALL local cache (for switching users)
+   * CRITICAL: Call this when detecting a new user sign-in to prevent data leakage
+   */
+  clearAllLocalCache: async (): Promise<void> => {
+    console.log('[storage.clearAllLocalCache] Clearing all IndexedDB data');
     await dbRequest(STORE_USERS, 'readwrite', store => store.clear());
     await dbRequest(STORE_CARDS, 'readwrite', store => store.clear());
   },

@@ -22,7 +22,7 @@ export default async (req: Request) => {
 
     await sql`
       INSERT INTO cards (
-        id, clerk_id, timestamp, image_url, theme, alignment, user_name, is_public
+        id, clerk_id, timestamp, image_url, theme, alignment, user_name, public, active, save_count
       )
       VALUES (
         ${card.id},
@@ -32,7 +32,9 @@ export default async (req: Request) => {
         ${card.theme},
         ${card.alignment},
         ${card.userName},
-        ${card.isPublic || false}
+        ${card.public !== undefined ? card.public : false},
+        TRUE,
+        0
       )
     `;
 

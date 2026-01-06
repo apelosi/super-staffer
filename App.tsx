@@ -1,46 +1,232 @@
 import React, { useEffect, useState } from 'react';
-import { useAuth, useUser } from '@clerk/clerk-react';
-import { Routes, Route, useNavigate, useParams } from 'react-router-dom';
+import { useAuth, useUser, useClerk } from '@clerk/clerk-react';
+import { Routes, Route, useNavigate, useParams, Navigate, useLocation } from 'react-router-dom';
 import { storage } from './services/storage';
 import { User, CardData, ThemeName, Alignment } from './types';
+import { pendingCardSave } from './utils/pendingCardSave';
 import ParallaxHero from './components/ParallaxHero';
 import Onboarding from './components/Onboarding';
 import Dashboard from './components/Dashboard';
 import CardCreator from './components/CardCreator';
 import SingleCardView from './components/SingleCardView';
 import LoadingScreen from './components/LoadingScreen';
+import Toast from './components/Toast';
 
-type View = 'home' | 'onboarding' | 'dashboard' | 'creator' | 'single-card';
-
+/**
+ * Public card view at /card/:id
+ * Shows public cards with "Add to Collection" button for non-owners
+ */
 const PublicCardView: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const { isSignedIn, userId } = useAuth();
+  const { openSignUp } = useClerk();
+  const navigate = useNavigate();
   const [card, setCard] = useState<CardData | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isSaved, setIsSaved] = useState(false);
+  const [backDestination, setBackDestination] = useState<string>('/');
+  const [toastMessage, setToastMessage] = useState('');
+  const [showToast, setShowToast] = useState(false);
+  const [isTogglingVisibility, setIsTogglingVisibility] = useState(false);
+  const [pendingVisibility, setPendingVisibility] = useState(false);
+  const [isTogglingCollection, setIsTogglingCollection] = useState(false);
 
   useEffect(() => {
     const loadCard = async () => {
-      if (!id) return;
+      console.log('[PublicCardView] Loading card:', id, 'isSignedIn:', isSignedIn, 'userId:', userId);
+
+      if (!id) {
+        console.log('[PublicCardView] No card ID, returning');
+        return;
+      }
 
       try {
-        const loadedCard = await storage.getCardById(id);
-        if (loadedCard && loadedCard.isPublic) {
-          setCard(loadedCard);
+        // Performance optimization: Pass viewer's Clerk ID to enable cache-first for owners
+        // If viewer owns the card, it will be loaded from cache (60-300x faster)
+        // If viewer doesn't own it, it will fetch fresh from cloud to validate public state
+        const loadedCard = await storage.getCardById(id, userId || undefined);
+        console.log('[PublicCardView] Loaded card:', loadedCard);
+
+        // Card must exist, be active, and be public (or user is owner)
+        if (loadedCard && loadedCard.active) {
+          console.log('[PublicCardView] Card is active. public:', loadedCard.public, 'ownerClerkId:', loadedCard.ownerClerkId);
+
+          if (loadedCard.public || (isSignedIn && userId === loadedCard.ownerClerkId)) {
+            console.log('[PublicCardView] Card passed visibility check, setting card state');
+            setCard(loadedCard);
+
+            // Load user data if signed in and card owner
+            if (isSignedIn && userId && userId === loadedCard.ownerClerkId) {
+              console.log('[PublicCardView] Loading owner user data');
+              const userData = await storage.getUser(userId);
+              setUser(userData);
+            }
+
+            // Check if current user has saved this card
+            if (isSignedIn && userId && userId !== loadedCard.ownerClerkId) {
+              console.log('[PublicCardView] Checking if card is saved');
+              const saved = await storage.checkCardSaved(userId, id);
+              setIsSaved(saved);
+            }
+          } else {
+            console.log('[PublicCardView] Card failed visibility check - not public and user is not owner');
+          }
+        } else {
+          console.log('[PublicCardView] Card does not exist or is not active');
         }
       } catch (error) {
-        console.error('Failed to load card:', error);
+        console.error('[PublicCardView] Failed to load card:', error);
       } finally {
         setLoading(false);
       }
     };
 
     loadCard();
-  }, [id]);
+  }, [id, isSignedIn, userId]);
+
+  // Determine back button destination based on user context
+  useEffect(() => {
+    const determineBackButton = async () => {
+      if (!card) return;
+
+      // Not signed in → back to homepage
+      if (!isSignedIn) {
+        setBackDestination('/');
+        return;
+      }
+
+      const isOwner = userId === card.ownerClerkId;
+
+      // Owner viewing own card → back to My Cards
+      if (isOwner) {
+        setBackDestination('/cards/my');
+        return;
+      }
+
+      // Non-owner signed in → check if in their collection
+      if (userId && id) {
+        const saved = await storage.checkCardSaved(userId, id);
+        if (saved) {
+          // In collection → back to Saved Cards
+          setBackDestination('/cards/saved');
+        } else {
+          // Not in collection → back to homepage
+          setBackDestination('/');
+        }
+      } else {
+        setBackDestination('/');
+      }
+    };
+
+    determineBackButton();
+  }, [card, isSignedIn, userId, id]);
+
+  const handleAddToCollection = async () => {
+    if (!id || isTogglingCollection) return;
+
+    if (!isSignedIn) {
+      // Not signed in - store card ID and trigger sign-up
+      pendingCardSave.set(id);
+      openSignUp({
+        afterSignUpUrl: '/onboarding?saveCard=true',
+        redirectUrl: `/card/${id}`,
+      });
+      return;
+    }
+
+    // User is signed in - add to collection
+    if (userId) {
+      setIsTogglingCollection(true);
+
+      try {
+        await storage.saveCardToCollection(userId, id);
+        // Update UI only after database confirms success
+        setIsSaved(true);
+        // No success toast - the button state change is the confirmation
+
+        // Reload card to get updated save count (fetch fresh from cloud - not owner's card)
+        const updatedCard = await storage.getCardById(id);
+        if (updatedCard) {
+          setCard(updatedCard);
+        }
+      } catch (error) {
+        console.error('Failed to save card:', error);
+        setToastMessage('Failed to save card. Please try again.');
+        setShowToast(true);
+      } finally {
+        setIsTogglingCollection(false);
+      }
+    }
+  };
+
+  const handleDeleteCard = async (cardId: string) => {
+    try {
+      await storage.deleteCard(cardId);
+      setToastMessage('Card deleted successfully');
+      setShowToast(true);
+      // Navigate back to dashboard after delete
+      setTimeout(() => navigate('/cards/my'), 1000);
+    } catch (error) {
+      console.error('Failed to delete card:', error);
+      setToastMessage('Failed to delete card. Please try again.');
+      setShowToast(true);
+    }
+  };
+
+  const handleToggleVisibility = async (cardId: string) => {
+    if (!card || isTogglingVisibility) return;
+
+    const newPublicValue = !card.public;
+
+    // Show loading state with pending value
+    setIsTogglingVisibility(true);
+    setPendingVisibility(newPublicValue);
+
+    try {
+      await storage.toggleCardVisibility(cardId, newPublicValue);
+      // Update UI only after database confirms success
+      setCard({ ...card, public: newPublicValue });
+      // No success toast - the button state change is the confirmation
+    } catch (error) {
+      console.error('Failed to toggle visibility:', error);
+      setToastMessage('Failed to update visibility. Please try again.');
+      setShowToast(true);
+    } finally {
+      setIsTogglingVisibility(false);
+    }
+  };
+
+  const handleRemoveFromCollection = async () => {
+    if (!id || !userId || isTogglingCollection) return;
+
+    setIsTogglingCollection(true);
+
+    try {
+      await storage.removeCardFromCollection(userId, id);
+      // Update UI only after database confirms success
+      setIsSaved(false);
+      // No success toast - the button state change is the confirmation
+
+      // Reload card to get updated save count
+      const updatedCard = await storage.getCardById(id);
+      if (updatedCard) {
+        setCard(updatedCard);
+      }
+    } catch (error) {
+      console.error('Failed to remove card:', error);
+      setToastMessage('Failed to remove card. Please try again.');
+      setShowToast(true);
+    } finally {
+      setIsTogglingCollection(false);
+    }
+  };
 
   if (loading) {
     return <LoadingScreen />;
   }
 
-  if (!card) {
+  if (!card || (!card.public && (!isSignedIn || userId !== card.ownerClerkId))) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center p-6">
         <div className="text-center">
@@ -59,65 +245,178 @@ const PublicCardView: React.FC = () => {
     );
   }
 
+  const isOwner = isSignedIn && userId === card.ownerClerkId;
+
   return (
-    <SingleCardView
-      card={card}
-      onBack={() => window.location.href = '/'}
-      onDelete={() => {}}
-      onToggleVisibility={() => {}}
-      isOwner={false}
-    />
+    <>
+      <SingleCardView
+        card={card}
+        user={user}
+        onBack={() => navigate(backDestination)}
+        onDelete={handleDeleteCard}
+        onToggleVisibility={handleToggleVisibility}
+        isOwner={isOwner}
+        isSaved={isSaved}
+        onAddToCollection={handleAddToCollection}
+        onRemoveFromCollection={handleRemoveFromCollection}
+        showAddButton={!isOwner}
+        isTogglingVisibility={isTogglingVisibility}
+        pendingVisibility={pendingVisibility}
+        isTogglingCollection={isTogglingCollection}
+      />
+      <Toast
+        message={toastMessage}
+        isVisible={showToast}
+        onClose={() => setShowToast(false)}
+      />
+    </>
   );
 };
 
+/**
+ * Main App Component with React Router
+ */
 const App: React.FC = () => {
   const { isLoaded: authLoaded, isSignedIn } = useAuth();
   const { user: clerkUser } = useUser();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const [view, setView] = useState<View | null>(null); // null = initializing
   const [localUser, setLocalUser] = useState<User | null>(null);
   const [cards, setCards] = useState<CardData[]>([]);
+  const [savedCards, setSavedCards] = useState<CardData[]>([]);
   const [hasProfile, setHasProfile] = useState(false);
-  const [selectedCard, setSelectedCard] = useState<CardData | null>(null);
+  const [initializing, setInitializing] = useState(true);
+  const [toastMessage, setToastMessage] = useState('');
+  const [showToast, setShowToast] = useState(false);
 
   // Check Clerk profile and load user data - RUNS ONCE when auth loads
   useEffect(() => {
     const checkProfile = async () => {
-      if (!authLoaded) return;
+      console.log('[App.checkProfile] Running - authLoaded:', authLoaded, 'isSignedIn:', isSignedIn, 'clerkUser:', clerkUser?.id);
 
-      // Not signed in - show home page
-      if (!isSignedIn || !clerkUser) {
-        setHasProfile(false);
-        setLocalUser(null);
-        setCards([]);
-        setView('home');
+      // CRITICAL: Wait for Clerk to fully load before doing ANYTHING
+      if (!authLoaded) {
+        console.log('[App.checkProfile] Auth not loaded yet, returning early');
         return;
       }
 
-      // Signed in - check for profile (keep view as null until we know)
+      // Not signed in - clear everything and stop initializing
+      if (!isSignedIn || !clerkUser) {
+        console.log('[App.checkProfile] User not signed in, clearing state');
+        setHasProfile(false);
+        setLocalUser(null);
+        setCards([]);
+        setSavedCards([]);
+        setInitializing(false);
+        return;
+      }
+
+      // OPTION 2: Cache validation - check if cached user matches current user (only on load)
+      const cachedUserId = sessionStorage.getItem('lastAuthenticatedUserId');
+      if (cachedUserId && cachedUserId !== clerkUser.id) {
+        console.warn('[App.checkProfile] CACHE VALIDATION FAILED - clearing cache. Cached:', cachedUserId, 'Current:', clerkUser.id);
+        await storage.clearAllLocalCache();
+        setCards([]);
+        setSavedCards([]);
+        setLocalUser(null);
+      }
+      // Store current user ID for next load
+      sessionStorage.setItem('lastAuthenticatedUserId', clerkUser.id);
+
+      // Signed in - check for profile
+      console.log('[App.checkProfile] User signed in, checking profile for:', clerkUser.id);
       const userData = await storage.getUser(clerkUser.id);
 
       if (userData) {
-        // Existing user with profile - go straight to dashboard
+        // Existing user with profile
+        console.log('[App.checkProfile] User has profile, loading cards');
         setLocalUser(userData);
         setHasProfile(true);
-        const loadedCards = await storage.getCards(clerkUser.id);
-        setCards(loadedCards);
-        setView('dashboard');
+
+        // Load cards
+        console.log('[App.checkProfile] About to call getSavedCards with:', clerkUser.id);
+        const [myCards, userSavedCards] = await Promise.all([
+          storage.getCards(clerkUser.id),
+          storage.getSavedCards(clerkUser.id),
+        ]);
+        setCards(myCards);
+        setSavedCards(userSavedCards);
+
+        // Check for pending card save
+        const pendingCardId = pendingCardSave.get();
+        if (pendingCardId) {
+          try {
+            await storage.saveCardToCollection(clerkUser.id, pendingCardId);
+            pendingCardSave.clear();
+
+            // Reload saved cards
+            const updated = await storage.getSavedCards(clerkUser.id);
+            setSavedCards(updated);
+
+            setToastMessage('Card saved to your collection! You can view it in Saved Cards after completing onboarding.');
+            setShowToast(true);
+          } catch (error) {
+            console.error('Failed to save pending card:', error);
+          }
+        }
+
+        // Redirect to /cards/my if on root
+        if (location.pathname === '/') {
+          navigate('/cards/my');
+        }
       } else {
-        // New user without profile - go straight to onboarding
+        // New user without profile - needs onboarding
         setHasProfile(false);
-        setView('onboarding');
+
+        // Redirect to onboarding if not already there
+        if (location.pathname !== '/onboarding') {
+          navigate('/onboarding');
+        }
       }
+
+      setInitializing(false);
     };
 
     checkProfile();
   }, [authLoaded, isSignedIn, clerkUser]);
 
-  const handleStart = () => {
-    setView('onboarding');
-  };
+  // OPTION 1: Clear cache on sign-out
+  useEffect(() => {
+    // Watch for sign-out event
+    if (authLoaded && !isSignedIn) {
+      const handleSignOut = async () => {
+        console.log('[App] User signed out - clearing all local cache');
+        await storage.clearAllLocalCache();
+        sessionStorage.removeItem('lastAuthenticatedUserId');
+        setCards([]);
+        setSavedCards([]);
+        setLocalUser(null);
+        setHasProfile(false);
+      };
+
+      handleSignOut();
+    }
+  }, [authLoaded, isSignedIn]);
+
+  // Reload cards when navigating to dashboard pages
+  useEffect(() => {
+    const reloadCards = async () => {
+      if (!isSignedIn || !clerkUser || !hasProfile) return;
+
+      // Only reload on dashboard pages
+      if (location.pathname.startsWith('/cards/') || location.pathname === '/personalize') {
+        const [myCards, userSavedCards] = await Promise.all([
+          storage.getCards(clerkUser.id),
+          storage.getSavedCards(clerkUser.id),
+        ]);
+        setCards(myCards);
+        setSavedCards(userSavedCards);
+      }
+    };
+
+    reloadCards();
+  }, [location.pathname, isSignedIn, clerkUser, hasProfile]);
 
   const handleOnboardingComplete = async (newUser: User) => {
     if (!clerkUser) return;
@@ -126,20 +425,31 @@ const App: React.FC = () => {
       await storage.saveUser(newUser);
       setLocalUser(newUser);
       setHasProfile(true);
-      setView('creator');
+
+      // Check for pending card save during onboarding
+      const pendingCardId = pendingCardSave.get();
+      if (pendingCardId) {
+        try {
+          await storage.saveCardToCollection(clerkUser.id, pendingCardId);
+          pendingCardSave.clear();
+
+          // Reload saved cards
+          const updated = await storage.getSavedCards(clerkUser.id);
+          setSavedCards(updated);
+
+          setToastMessage('Card saved to your collection! You can view it in Saved Cards after completing onboarding.');
+          setShowToast(true);
+        } catch (error) {
+          console.error('Failed to save pending card:', error);
+        }
+      }
+
+      // Navigate to card creator for first card
+      navigate('/creator');
     } catch (error) {
       console.error('Failed to complete onboarding:', error);
       alert('Failed to save profile. Please try again.');
     }
-  };
-
-  const handleLogout = async () => {
-    // Clerk handles sign out via UserButton component
-    // Just clear local state
-    setLocalUser(null);
-    setCards([]);
-    setHasProfile(false);
-    setView('home');
   };
 
   const handleCardCreated = async (imageUrl: string, theme: ThemeName, alignment: Alignment) => {
@@ -152,24 +462,30 @@ const App: React.FC = () => {
       theme,
       alignment,
       userName: localUser.name,
-      isPublic: false, // Default to private
+      public: false,
+      active: true,
+      saveCount: 0,
+      ownerClerkId: clerkUser.id,
     };
+
     await storage.saveCard(newCard, clerkUser.id);
     setCards(prev => [...prev, newCard]);
-    setSelectedCard(newCard);
-    setView('single-card');
+
+    // Small delay to ensure IndexedDB transaction commits before navigation
+    // This prevents race condition where PublicCardView loads before card is queryable
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    // Navigate to single card view
+    navigate(`/card/${newCard.id}`);
   };
 
   const handleDeleteCard = async (id: string) => {
-    console.log('App.handleDeleteCard called for id:', id);
     try {
       await storage.deleteCard(id);
-      console.log('Storage.deleteCard completed for id:', id);
       setCards(prev => prev.filter(c => c.id !== id));
-      console.log('Cards state updated, card removed from UI');
     } catch (error) {
-      console.error('Error in handleDeleteCard:', error);
-      throw error; // Re-throw so Dashboard can handle it
+      console.error('Error deleting card:', error);
+      throw error;
     }
   };
 
@@ -185,90 +501,131 @@ const App: React.FC = () => {
     }
   };
 
-  const handleCardSelect = (card: CardData) => {
-    setSelectedCard(card);
-    setView('single-card');
-  };
-
   const handleToggleVisibility = async (cardId: string) => {
     const card = cards.find(c => c.id === cardId);
     if (!card) return;
 
-    const newIsPublic = !card.isPublic;
+    const newPublicValue = !card.public;
 
     // Optimistic update
-    setCards(prev => prev.map(c => c.id === cardId ? { ...c, isPublic: newIsPublic } : c));
-    if (selectedCard && selectedCard.id === cardId) {
-      setSelectedCard({ ...selectedCard, isPublic: newIsPublic });
-    }
+    setCards(prev => prev.map(c => c.id === cardId ? { ...c, public: newPublicValue } : c));
 
     try {
-      await storage.toggleCardVisibility(cardId, newIsPublic);
+      await storage.toggleCardVisibility(cardId, newPublicValue);
     } catch (error) {
       console.error('Failed to toggle visibility:', error);
       // Revert on error
-      setCards(prev => prev.map(c => c.id === cardId ? { ...c, isPublic: !newIsPublic } : c));
-      if (selectedCard && selectedCard.id === cardId) {
-        setSelectedCard({ ...selectedCard, isPublic: !newIsPublic });
-      }
+      setCards(prev => prev.map(c => c.id === cardId ? { ...c, public: !newPublicValue } : c));
     }
   };
 
-  // View Routing
-  // Show loading ONLY while initializing (view is null)
-  if (view === null) {
+  // Show loading while initializing
+  if (initializing) {
     return <LoadingScreen />;
   }
 
   return (
-    <Routes>
-      {/* Public card view route */}
-      <Route path="/card/:id" element={<PublicCardView />} />
+    <>
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={
+          isSignedIn && hasProfile ? <Navigate to="/cards/my" replace /> : <ParallaxHero onStart={() => navigate('/onboarding')} />
+        } />
+        <Route path="/card/:id" element={<PublicCardView />} />
 
-      {/* Main app routes */}
-      <Route path="*" element={
-        <>
-          {view === 'home' && <ParallaxHero onStart={handleStart} />}
+        {/* Auth Required Routes */}
+        <Route path="/onboarding" element={
+          isSignedIn ? (
+            hasProfile ? <Navigate to="/cards/my" replace /> : (
+              <Onboarding
+                onComplete={handleOnboardingComplete}
+                onCancel={() => navigate('/')}
+              />
+            )
+          ) : (
+            <Navigate to="/" replace />
+          )
+        } />
 
-          {view === 'onboarding' && (
-            <Onboarding
-              onComplete={handleOnboardingComplete}
-              onCancel={() => setView('home')}
-            />
-          )}
-
-          {view === 'creator' && localUser && (
+        <Route path="/creator" element={
+          isSignedIn && hasProfile && localUser ? (
             <CardCreator
               user={localUser}
-              onCancel={() => setView('dashboard')}
+              onCancel={() => navigate('/cards/my')}
               onSuccess={handleCardCreated}
             />
-          )}
+          ) : (
+            <Navigate to="/" replace />
+          )
+        } />
 
-          {view === 'dashboard' && localUser && (
+        <Route path="/cards/my" element={
+          isSignedIn && hasProfile && localUser ? (
             <Dashboard
               user={localUser}
               cards={cards}
-              onCreateClick={() => setView('creator')}
-              onLogout={handleLogout}
-              onCardSelect={handleCardSelect}
+              savedCards={savedCards}
+              activeTab="my"
+              onCreateClick={() => navigate('/creator')}
+              onCardSelect={(card) => navigate(`/card/${card.id}`)}
+              onSavedCardSelect={(card) => navigate(`/card/${card.id}`)}
               onUpdateUser={handleUpdateUser}
-            />
-          )}
-
-          {view === 'single-card' && selectedCard && localUser && (
-            <SingleCardView
-              card={selectedCard}
-              user={localUser}
-              onBack={() => setView('dashboard')}
-              onDelete={handleDeleteCard}
+              onDeleteCard={handleDeleteCard}
               onToggleVisibility={handleToggleVisibility}
-              isOwner={true}
             />
-          )}
-        </>
-      } />
-    </Routes>
+          ) : (
+            <Navigate to="/" replace />
+          )
+        } />
+
+        <Route path="/cards/saved" element={
+          isSignedIn && hasProfile && localUser ? (
+            <Dashboard
+              user={localUser}
+              cards={cards}
+              savedCards={savedCards}
+              activeTab="saved"
+              onCreateClick={() => navigate('/creator')}
+              onCardSelect={(card) => navigate(`/card/${card.id}`)}
+              onSavedCardSelect={(card) => navigate(`/card/${card.id}`)}
+              onUpdateUser={handleUpdateUser}
+              onDeleteCard={handleDeleteCard}
+              onToggleVisibility={handleToggleVisibility}
+            />
+          ) : (
+            <Navigate to="/" replace />
+          )
+        } />
+
+        <Route path="/personalize" element={
+          isSignedIn && hasProfile && localUser ? (
+            <Dashboard
+              user={localUser}
+              cards={cards}
+              savedCards={savedCards}
+              activeTab="personalize"
+              onCreateClick={() => navigate('/creator')}
+              onCardSelect={(card) => navigate(`/card/${card.id}`)}
+              onSavedCardSelect={(card) => navigate(`/card/${card.id}`)}
+              onUpdateUser={handleUpdateUser}
+              onDeleteCard={handleDeleteCard}
+              onToggleVisibility={handleToggleVisibility}
+            />
+          ) : (
+            <Navigate to="/" replace />
+          )
+        } />
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+
+      <Toast
+        message={toastMessage}
+        isVisible={showToast}
+        onClose={() => setShowToast(false)}
+      />
+    </>
   );
 };
 

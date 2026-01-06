@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { User, CardData } from '../types';
 import TradingCard from './TradingCard';
 import SuperPowersInput from './SuperPowersInput';
@@ -9,20 +10,28 @@ import Layout from './Layout';
 interface DashboardProps {
   user: User;
   cards: CardData[];
+  savedCards: CardData[];
+  activeTab: 'my' | 'saved' | 'personalize';
   onCreateClick: () => void;
-  onLogout: () => void;
   onCardSelect: (card: CardData) => void;
+  onSavedCardSelect: (card: CardData) => void;
   onUpdateUser: (user: User) => void;
+  onDeleteCard: (id: string) => Promise<void>;
+  onToggleVisibility: (id: string) => Promise<void>;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({
   user,
   cards,
+  savedCards,
+  activeTab,
   onCreateClick,
   onCardSelect,
+  onSavedCardSelect,
   onUpdateUser,
+  onDeleteCard,
+  onToggleVisibility,
 }) => {
-  const [activeTab, setActiveTab] = useState<'collection' | 'personalize'>('collection');
 
   // Per-field editing state
   const [editingField, setEditingField] = useState<'name' | 'selfie' | 'strengths' | 'story' | null>(null);
@@ -93,21 +102,34 @@ const Dashboard: React.FC<DashboardProps> = ({
         {/* Tabs */}
         <div className="max-w-6xl mx-auto mb-12">
           <div className="flex border-b border-gray-200">
-            <button
-              onClick={() => setActiveTab('collection')}
+            <Link
+              to="/cards/my"
               className={`px-8 py-4 font-action text-lg transition-all relative ${
-                activeTab === 'collection'
+                activeTab === 'my'
                   ? 'text-vibez-blue'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              COLLECTION
-              {activeTab === 'collection' && (
+              MY CARDS
+              {activeTab === 'my' && (
                 <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-vibez-blue to-vibez-purple" />
               )}
-            </button>
-            <button
-              onClick={() => setActiveTab('personalize')}
+            </Link>
+            <Link
+              to="/cards/saved"
+              className={`px-8 py-4 font-action text-lg transition-all relative ${
+                activeTab === 'saved'
+                  ? 'text-vibez-blue'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              SAVED CARDS
+              {activeTab === 'saved' && (
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-vibez-blue to-vibez-purple" />
+              )}
+            </Link>
+            <Link
+              to="/personalize"
               className={`px-8 py-4 font-action text-lg transition-all relative ${
                 activeTab === 'personalize'
                   ? 'text-vibez-blue'
@@ -118,12 +140,12 @@ const Dashboard: React.FC<DashboardProps> = ({
               {activeTab === 'personalize' && (
                 <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-vibez-blue to-vibez-purple" />
               )}
-            </button>
+            </Link>
           </div>
         </div>
 
-        {/* Collection Tab */}
-        {activeTab === 'collection' && (
+        {/* My Cards Tab */}
+        {activeTab === 'my' && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 justify-items-center">
             {/* Create New Card Button */}
             <button
@@ -150,6 +172,34 @@ const Dashboard: React.FC<DashboardProps> = ({
                 />
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Saved Cards Tab */}
+        {activeTab === 'saved' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 justify-items-center">
+            {savedCards.length === 0 ? (
+              <div className="col-span-full text-center py-20">
+                <p className="font-action text-2xl text-gray-400 mb-4">NO SAVED CARDS YET</p>
+                <p className="font-comic text-lg text-gray-500">
+                  Save cards from other users to view them here!
+                </p>
+              </div>
+            ) : (
+              savedCards.map((card: CardData) => (
+                <div
+                  key={card.id}
+                  className="w-full max-w-sm cursor-pointer"
+                  onClick={() => onSavedCardSelect(card)}
+                >
+                  <TradingCard
+                    card={card}
+                    user={user}
+                    variant="dashboard"
+                  />
+                </div>
+              ))
+            )}
           </div>
         )}
 

@@ -1,6 +1,5 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { VIBEZ_LOGO_SVG } from '../constants';
 
 const LoadingScreen: React.FC = () => {
     return (
@@ -16,9 +15,13 @@ const LoadingScreen: React.FC = () => {
                         rotate: { duration: 2, repeat: Infinity, ease: "linear" },
                         scale: { duration: 1.5, repeat: Infinity }
                     }}
-                    className="mb-8 inline-block w-24 h-24"
+                    className="mb-8 inline-block"
                 >
-                    <div dangerouslySetInnerHTML={{ __html: VIBEZ_LOGO_SVG }} />
+                    <img
+                        src="/logos/ss-logo-rich-128x128.png"
+                        alt="Super Staffer Logo"
+                        className="w-24 h-24"
+                    />
                 </motion.div>
 
                 <h2 className="font-action text-4xl md:text-5xl text-white mb-4">

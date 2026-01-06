@@ -118,15 +118,83 @@ export const db = {
   /**
    * Toggle card public/private status
    */
-  toggleCardVisibility: async (cardId: string, isPublic: boolean): Promise<{ success: boolean }> => {
+  toggleCardVisibility: async (cardId: string, publicValue: boolean): Promise<{ success: boolean }> => {
     const response = await fetch('/.netlify/functions/db-toggle-card-visibility', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cardId, isPublic }),
+      body: JSON.stringify({ cardId, public: publicValue }),
     });
 
     if (!response.ok) {
       throw new Error('Failed to toggle card visibility');
+    }
+
+    return response.json();
+  },
+
+  /**
+   * Save a card to user's collection
+   */
+  saveCardToCollection: async (userClerkId: string, cardId: string): Promise<{ success: boolean }> => {
+    const response = await fetch('/.netlify/functions/db-save-card-to-collection', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userClerkId, cardId }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to save card to collection');
+    }
+
+    return response.json();
+  },
+
+  /**
+   * Remove a card from user's collection
+   */
+  removeCardFromCollection: async (userClerkId: string, cardId: string): Promise<{ success: boolean }> => {
+    const response = await fetch('/.netlify/functions/db-remove-card-from-collection', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userClerkId, cardId }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to remove card from collection');
+    }
+
+    return response.json();
+  },
+
+  /**
+   * Get all saved cards for a user
+   */
+  getSavedCards: async (clerkId: string): Promise<{ cards: CardData[] }> => {
+    const response = await fetch('/.netlify/functions/db-get-saved-cards', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clerkId }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to get saved cards');
+    }
+
+    return response.json();
+  },
+
+  /**
+   * Check if a card is saved by a user
+   */
+  checkCardSaved: async (userClerkId: string, cardId: string): Promise<{ isSaved: boolean }> => {
+    const response = await fetch('/.netlify/functions/db-check-card-saved', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userClerkId, cardId }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to check card saved status');
     }
 
     return response.json();

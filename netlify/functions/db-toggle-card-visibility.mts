@@ -11,18 +11,18 @@ export default async (req: Request) => {
   const sql = neon(process.env.NETLIFY_DATABASE_URL!);
 
   try {
-    const { cardId, isPublic } = await req.json();
+    const { cardId, public: publicValue } = await req.json();
 
-    if (!cardId || typeof isPublic !== 'boolean') {
+    if (!cardId || typeof publicValue !== 'boolean') {
       return new Response(
-        JSON.stringify({ error: 'Missing cardId or isPublic' }),
+        JSON.stringify({ error: 'Missing cardId or public' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
     await sql`
       UPDATE cards
-      SET is_public = ${isPublic}
+      SET public = ${publicValue}
       WHERE id = ${cardId}
     `;
 

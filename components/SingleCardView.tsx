@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import TradingCard from './TradingCard';
 import { CardData, User } from '../types';
-import { ArrowLeft, Download, Trash2, Lock, Unlock, Link as LinkIcon, Check, Loader2, Sparkles, RefreshCw } from 'lucide-react';
-import { VIBEZ_LOGO_SVG } from '../constants';
+import { ArrowLeft, Download, Trash2, Lock, Unlock, Link as LinkIcon, Check, Loader2, Sparkles, RefreshCw, Plus } from 'lucide-react';
 import Layout from './Layout';
 
 interface SingleCardViewProps {
@@ -13,6 +12,13 @@ interface SingleCardViewProps {
   onDelete: (cardId: string) => void;
   onToggleVisibility: (cardId: string) => void;
   isOwner: boolean;
+  isSaved?: boolean;
+  showAddButton?: boolean;
+  onAddToCollection?: () => void;
+  onRemoveFromCollection?: () => void;
+  isTogglingVisibility?: boolean;
+  pendingVisibility?: boolean;
+  isTogglingCollection?: boolean;
 }
 
 const SingleCardView: React.FC<SingleCardViewProps> = ({
@@ -21,9 +27,18 @@ const SingleCardView: React.FC<SingleCardViewProps> = ({
   onBack,
   onDelete,
   onToggleVisibility,
-  isOwner
+  isOwner,
+  isSaved = false,
+  showAddButton = false,
+  onAddToCollection,
+  onRemoveFromCollection,
+  isTogglingVisibility = false,
+  pendingVisibility = false,
+  isTogglingCollection = false,
 }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -81,19 +96,17 @@ const SingleCardView: React.FC<SingleCardViewProps> = ({
     ctx.lineTo(width - 40, height - 100);
     ctx.stroke();
 
-    // Draw Vibez logo (top-left)
+    // Draw SuperStaffer logo (top-left)
     try {
       const logoImg = new Image();
-      const svgBlob = new Blob([VIBEZ_LOGO_SVG], { type: 'image/svg+xml;charset=utf-8' });
-      const url = URL.createObjectURL(svgBlob);
+      logoImg.crossOrigin = "anonymous";
       await new Promise((resolve, reject) => {
         logoImg.onload = () => {
           ctx.drawImage(logoImg, 50, 50, 50, 50);
-          URL.revokeObjectURL(url);
           resolve(null);
         };
         logoImg.onerror = reject;
-        logoImg.src = url;
+        logoImg.src = '/logos/ss-logo-rich-64x64.png';
       });
     } catch (error) {
       console.warn('Logo rendering failed', error);
@@ -351,12 +364,6 @@ const SingleCardView: React.FC<SingleCardViewProps> = ({
       }
 
       // Otherwise render the front card
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, width, height);
-
-      const borderRadius = 20;
-      const borderWidth = 20;
-
       const img = new Image();
       img.crossOrigin = "anonymous";
 
@@ -385,21 +392,6 @@ const SingleCardView: React.FC<SingleCardViewProps> = ({
 
       ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
 
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = borderWidth;
-      ctx.beginPath();
-      ctx.moveTo(borderRadius, borderWidth / 2);
-      ctx.lineTo(width - borderRadius, borderWidth / 2);
-      ctx.quadraticCurveTo(width - borderWidth / 2, borderWidth / 2, width - borderWidth / 2, borderRadius);
-      ctx.lineTo(width - borderWidth / 2, height - borderRadius);
-      ctx.quadraticCurveTo(width - borderWidth / 2, height - borderWidth / 2, width - borderRadius, height - borderWidth / 2);
-      ctx.lineTo(borderRadius, height - borderWidth / 2);
-      ctx.quadraticCurveTo(borderWidth / 2, height - borderWidth / 2, borderWidth / 2, height - borderRadius);
-      ctx.lineTo(borderWidth / 2, borderRadius);
-      ctx.quadraticCurveTo(borderWidth / 2, borderWidth / 2, borderRadius, borderWidth / 2);
-      ctx.closePath();
-      ctx.stroke();
-
       ctx.font = 'italic 900 36px "Arial", sans-serif';
       ctx.fillStyle = 'white';
       ctx.shadowColor = 'black';
@@ -427,17 +419,14 @@ const SingleCardView: React.FC<SingleCardViewProps> = ({
       try {
         const logoImg = new Image();
         logoImg.crossOrigin = "anonymous";
-        const svgBlob = new Blob([VIBEZ_LOGO_SVG], { type: 'image/svg+xml;charset=utf-8' });
-        const url = URL.createObjectURL(svgBlob);
 
         await new Promise((resolve, reject) => {
           logoImg.onload = () => {
             ctx.drawImage(logoImg, lx, ly, logoSize, logoSize);
-            URL.revokeObjectURL(url);
             resolve(null);
           };
           logoImg.onerror = reject;
-          logoImg.src = url;
+          logoImg.src = '/logos/ss-logo-rich-64x64.png';
         });
       } catch (error) {
         console.warn("Logo drawing failed", error);
@@ -447,7 +436,7 @@ const SingleCardView: React.FC<SingleCardViewProps> = ({
 
       const dataUrl = canvas.toDataURL('image/png');
       const link = document.createElement('a');
-      link.download = `SuperStaffer-${card.userName}-${card.theme}.png`;
+      link.download = `SuperStaffer-${card.userName}-${card.theme}-FRONT.png`;
       link.href = dataUrl;
       link.click();
 
@@ -459,9 +448,17 @@ const SingleCardView: React.FC<SingleCardViewProps> = ({
     }
   };
 
-  const handleDelete = () => {
-    onDelete(card.id);
-    onBack();
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await onDelete(card.id);
+      onBack();
+    } catch (error) {
+      console.error('Failed to delete card:', error);
+      alert('Failed to delete card. Please try again.');
+      setShowDeleteConfirm(false);
+      setIsDeleting(false);
+    }
   };
 
   const handleCopyLink = async () => {
@@ -485,21 +482,29 @@ const SingleCardView: React.FC<SingleCardViewProps> = ({
 
   return (
     <Layout>
-      <div className="container mx-auto px-6 py-12">
+      <div className="container mx-auto px-4 py-4 md:px-6 md:py-12">
         {/* Back button */}
         <button
           onClick={onBack}
-          className="mb-8 p-3 bg-white border border-gray-200 hover:bg-gray-50 rounded-full transition-colors shadow-sm"
+          className="mb-4 p-2.5 md:p-3 bg-white border border-gray-200 hover:bg-gray-50 rounded-full transition-colors shadow-sm"
         >
-          <ArrowLeft className="w-6 h-6 text-gray-700" />
+          <ArrowLeft className="w-5 h-5 md:w-6 md:h-6 text-gray-700" />
         </button>
 
-        <div className="max-w-2xl mx-auto space-y-8">
+        {/* Save Count - centered when present */}
+        {card.saveCount > 0 && (
+          <p className="font-comic text-sm md:text-base text-gray-600 text-center mb-4">
+            {card.saveCount} {card.saveCount === 1 ? 'Staffer saved' : 'Staffers saved'} this card
+          </p>
+        )}
+
+        <div className="max-w-2xl mx-auto space-y-4">
           {/* Flip Card Container */}
           <div className="relative flex justify-center" style={{ perspective: '1000px' }}>
             {/* Animated Card Container */}
             <motion.div
               className="w-full max-w-sm relative"
+              initial={false}
               animate={{ rotateY: isFlipped ? 180 : 0 }}
               transition={{ duration: 0.6, ease: 'easeInOut' }}
               style={{ transformStyle: 'preserve-3d' }}
@@ -721,15 +726,18 @@ const SingleCardView: React.FC<SingleCardViewProps> = ({
                   {/* Visibility Toggle */}
                   <button
                     onClick={() => onToggleVisibility(card.id)}
-                    className="w-full relative rounded-2xl bg-gray-100 overflow-hidden transition-all hover:shadow-lg"
+                    disabled={isTogglingVisibility}
+                    className="w-full relative rounded-2xl bg-gray-100 overflow-hidden transition-all hover:shadow-lg disabled:cursor-wait"
                   >
                     {/* Sliding Background */}
                     <div
                       className={`absolute inset-y-0 w-1/2 rounded-xl transition-all duration-300 ease-in-out ${
-                        card.isPublic ? 'bg-green-500' : 'bg-red-500'
+                        isTogglingVisibility
+                          ? (pendingVisibility ? 'bg-green-500 opacity-50' : 'bg-red-500 opacity-50')
+                          : (card.public ? 'bg-green-500' : 'bg-red-500')
                       }`}
                       style={{
-                        left: card.isPublic ? '50%' : '0%',
+                        left: isTogglingVisibility ? (pendingVisibility ? '50%' : '0%') : (card.public ? '50%' : '0%'),
                       }}
                     />
 
@@ -737,7 +745,9 @@ const SingleCardView: React.FC<SingleCardViewProps> = ({
                     <div className="relative flex items-center">
                       {/* PRIVATE Side */}
                       <div className={`flex-1 flex items-center justify-center gap-2 py-4 transition-colors duration-300 ${
-                        !card.isPublic ? 'text-white' : 'text-gray-400'
+                        isTogglingVisibility
+                          ? (!pendingVisibility ? 'text-white' : 'text-gray-400')
+                          : (!card.public ? 'text-white' : 'text-gray-400')
                       }`}>
                         <Lock className="w-6 h-6" />
                         <span className="font-action text-xl">PRIVATE</span>
@@ -745,7 +755,9 @@ const SingleCardView: React.FC<SingleCardViewProps> = ({
 
                       {/* PUBLIC Side */}
                       <div className={`flex-1 flex items-center justify-center gap-2 py-4 transition-colors duration-300 ${
-                        card.isPublic ? 'text-white' : 'text-gray-400'
+                        isTogglingVisibility
+                          ? (pendingVisibility ? 'text-white' : 'text-gray-400')
+                          : (card.public ? 'text-white' : 'text-gray-400')
                       }`}>
                         <Unlock className="w-6 h-6" />
                         <span className="font-action text-xl">PUBLIC</span>
@@ -754,7 +766,7 @@ const SingleCardView: React.FC<SingleCardViewProps> = ({
                   </button>
 
                   {/* Copy Link (shown when public) */}
-                  {card.isPublic && (
+                  {card.public && (
                     <button
                       onClick={handleCopyLink}
                       className="w-full bg-white border-2 border-vibez-blue text-vibez-blue font-action text-xl py-5 rounded-2xl hover:bg-vibez-blue hover:text-white transition-all flex items-center justify-center gap-3"
@@ -790,15 +802,22 @@ const SingleCardView: React.FC<SingleCardViewProps> = ({
                       <div className="grid grid-cols-2 gap-3">
                         <button
                           onClick={() => setShowDeleteConfirm(false)}
-                          className="bg-white border-2 border-gray-200 text-gray-700 font-action text-lg py-3 rounded-xl hover:bg-gray-50 transition-all"
+                          disabled={isDeleting}
+                          className={`bg-white border-2 border-gray-200 text-gray-700 font-action text-lg py-3 rounded-xl hover:bg-gray-50 transition-all disabled:cursor-wait ${
+                            isDeleting ? 'opacity-50' : ''
+                          }`}
                         >
                           CANCEL
                         </button>
                         <button
                           onClick={handleDelete}
-                          className="bg-red-600 text-white font-action text-lg py-3 rounded-xl hover:bg-red-700 transition-all"
+                          disabled={isDeleting}
+                          className={`bg-red-600 text-white font-action text-lg py-3 rounded-xl hover:bg-red-700 transition-all flex items-center justify-center gap-2 disabled:cursor-wait ${
+                            isDeleting ? 'opacity-50' : ''
+                          }`}
                         >
-                          YES, DELETE
+                          {isDeleting && <Loader2 className="w-5 h-5 animate-spin" />}
+                          DELETE
                         </button>
                       </div>
                     </div>
@@ -855,7 +874,70 @@ const SingleCardView: React.FC<SingleCardViewProps> = ({
                     </button>
                   </div>
 
+                  {/* Add to Collection Button - show when not saved and not in confirmation state */}
+                  {showAddButton && onAddToCollection && !isSaved && !showRemoveConfirm && (
+                    <button
+                      onClick={onAddToCollection}
+                      disabled={isTogglingCollection}
+                      className={`w-full bg-gradient-to-r from-green-500 to-green-600 text-white font-action text-xl py-5 rounded-2xl hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:cursor-wait ${
+                        isTogglingCollection ? 'opacity-50' : ''
+                      }`}
+                    >
+                      {isTogglingCollection ? (
+                        <Loader2 className="w-6 h-6 animate-spin" />
+                      ) : (
+                        <Plus className="w-6 h-6" />
+                      )}
+                      ADD TO COLLECTION
+                    </button>
+                  )}
+
+                  {/* Remove from Collection Button - show when saved */}
+                  {showAddButton && isSaved && onRemoveFromCollection && !showRemoveConfirm && (
+                    <button
+                      onClick={() => setShowRemoveConfirm(true)}
+                      disabled={isTogglingCollection}
+                      className="w-full bg-white border-2 border-red-200 text-red-600 font-action text-xl py-5 rounded-2xl hover:border-red-400 hover:bg-red-50 transition-all flex items-center justify-center gap-3"
+                    >
+                      <Trash2 className="w-6 h-6" />
+                      REMOVE FROM COLLECTION
+                    </button>
+                  )}
+
+                  {/* Remove Confirmation - show when user clicks Remove */}
+                  {showRemoveConfirm && onRemoveFromCollection && (
+                    <div className="bg-red-50 border-2 border-red-300 rounded-2xl p-6 space-y-4">
+                      <p className="font-action text-lg text-red-900 text-center">
+                        REMOVE CARD FROM COLLECTION?
+                      </p>
+                      <div className="grid grid-cols-2 gap-3">
+                        <button
+                          onClick={() => setShowRemoveConfirm(false)}
+                          disabled={isTogglingCollection}
+                          className={`bg-white border-2 border-gray-200 text-gray-700 font-action text-lg py-3 rounded-xl hover:bg-gray-50 transition-all disabled:cursor-wait ${
+                            isTogglingCollection ? 'opacity-50' : ''
+                          }`}
+                        >
+                          CANCEL
+                        </button>
+                        <button
+                          onClick={() => {
+                            onRemoveFromCollection();
+                          }}
+                          disabled={isTogglingCollection}
+                          className={`bg-red-600 text-white font-action text-lg py-3 rounded-xl hover:bg-red-700 transition-all flex items-center justify-center gap-2 disabled:cursor-wait ${
+                            isTogglingCollection ? 'opacity-50' : ''
+                          }`}
+                        >
+                          {isTogglingCollection && <Loader2 className="w-5 h-5 animate-spin" />}
+                          REMOVE
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   {/* CTA Card - New Design */}
+                  {!showAddButton && (
                   <div className="relative rounded-3xl overflow-hidden shadow-xl">
                     {/* Animated Background */}
                     <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" />
@@ -892,6 +974,7 @@ const SingleCardView: React.FC<SingleCardViewProps> = ({
                       </a>
                     </div>
                   </div>
+                  )}
                 </div>
               )}
           </motion.div>

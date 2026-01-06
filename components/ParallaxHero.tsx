@@ -103,7 +103,7 @@ const ParallaxHero: React.FC<ParallaxHeroProps> = ({ onStart }) => {
               }}
             >
               <img
-                src={`/ss-${theme.id}-${alignment}.png`}
+                src={`/characters/ss-${theme.id}-${alignment}.png`}
                 alt=""
                 className="w-full h-auto object-contain drop-shadow-2xl"
               />
@@ -173,16 +173,29 @@ const ParallaxHero: React.FC<ParallaxHeroProps> = ({ onStart }) => {
                 className="max-w-5xl mx-auto text-center"
                 style={{ y: heroY, opacity: heroOpacity }}
               >
-                {/* White backdrop for readability */}
-                <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-8 md:p-12 shadow-2xl border-4 border-white">
+                {/* White backdrop for readability - 20% smaller padding on mobile */}
+                <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-5 md:p-12 shadow-2xl border-4 border-white">
+                  {/* Super Staffer Logo - 20% larger on all breakpoints */}
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                    className="mb-6 flex justify-center"
+                  >
+                    <img
+                      src="/logos/ss-logo-rich-256x256.png"
+                      alt="Super Staffer"
+                      className="w-40 h-40 md:w-48 md:h-48 drop-shadow-xl"
+                    />
+                  </motion.div>
+
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6 }}
                   >
-                    <p className="font-comic text-2xl md:text-4xl text-gray-700 mb-8 tracking-wide leading-relaxed">
-                      Transform yourself into the Super Staffer<br className="hidden md:block" />
-                      you were destined to become.
+                    <p className="font-comic text-2xl md:text-4xl text-gray-700 mb-6 tracking-wide leading-relaxed">
+                      Become the Super Staffer you are destined.
                     </p>
                   </motion.div>
 
@@ -362,7 +375,7 @@ const ParallaxHero: React.FC<ParallaxHeroProps> = ({ onStart }) => {
                     }}
                   >
                     <img
-                      src={`/ss-${theme.id}-${alignment}.png`}
+                      src={`/characters/ss-${theme.id}-${alignment}.png`}
                       alt=""
                       className="w-full h-auto object-contain drop-shadow-2xl"
                     />

@@ -1,5 +1,4 @@
 import React from 'react';
-import { VIBEZ_LOGO_SVG } from '../constants';
 
 const Footer: React.FC = () => {
     return (
@@ -10,9 +9,11 @@ const Footer: React.FC = () => {
                     {/* Brand Left */}
                     <div className="flex flex-col items-center md:items-start gap-1">
                         <div className="flex items-center gap-3">
-                            <div className="w-8 h-8">
-                                <div dangerouslySetInnerHTML={{ __html: VIBEZ_LOGO_SVG }} />
-                            </div>
+                            <img
+                                src="/logos/ss-logo-rich-32x32.png"
+                                alt="Super Staffer Logo"
+                                className="w-8 h-8"
+                            />
                             <h3 className="font-action text-xl text-white tracking-wide">
                                 SUPER <span className="text-transparent bg-clip-text bg-gradient-to-r from-vibez-blue to-vibez-purple">STAFFER</span>
                             </h3>

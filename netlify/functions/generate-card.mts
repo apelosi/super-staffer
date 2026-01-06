@@ -33,18 +33,31 @@ export default async (req: Request) => {
         const prompt = `
       Create a hyper-realistic, dynamic digital trading card artwork in the style of 1990s superhero cards (specifically Marvel Universe Series III 1992).
 
-      SUBJECT: The person in the input image, transformed into a powerful ${alignment} with a "${theme}" theme.
+      SUBJECT: The person in the input image depicted as a powerful ${alignment} with a "${theme}" theme. The face must remain true to the input photo.
+
+      CRITICAL - FACIAL LIKENESS REQUIREMENTS (HIGHEST PRIORITY):
+      - The character's face MUST be immediately recognizable as the person in the input photo
+      - Preserve the EXACT face shape, bone structure, and facial geometry from the input image
+      - Maintain ACCURATE eye shape, eye color, nose shape, lip shape, and facial proportions
+      - Keep all distinctive facial features, beauty marks, or characteristics visible in the input
+      - Preserve the natural skin tone and complexion accurately
+      - Hair color and hairstyle should closely match the input photo (can be enhanced with superhero elements but must remain recognizable)
+      - The person's warm smile and expression characteristics should be preserved
+      - Even with costume and powers, someone who knows this person should INSTANTLY recognize their face
+      - IMPORTANT: Facial accuracy is MORE IMPORTANT than perfect theme adherence
+      - If there is any conflict between likeness and theme, prioritize likeness
 
       COMPOSITION:
-      1. The character should be in a dramatic action pose, breaking the frame or coming towards the viewer.
+      1. The character should be in a dramatic action pose. Ensure the face is clearly visible and facing forward or at a 3/4 angle for maximum recognizability.
       2. BACKGROUND: A deep cosmic space/nebula texture with stars, typical of 90s cosmic trading cards.
       3. IMPORTANT: Behind the character's torso/body, there must be a distinct, rectangular "window" or portal frame. Inside this window, depict the Marina Bay Sands hotel in Singapore (three towers with the skypark boat on top) as a scenic backdrop. The character should appear to be in front of this window.
 
       STYLE DETAILS:
-      - Vibrant, saturated colors.
-      - Comic book style shading but with realistic textures.
-      - Do NOT include text on the image.
-      - Focus on the character design matching the theme: ${theme}.
+      - Vibrant, saturated colors for costume, powers, and background
+      - Comic book style shading with bold outlines for costume and environment
+      - Maintain realistic, recognizable facial features (face should NOT be heavily stylized)
+      - The costume, powers, and setting should match the ${theme} theme
+      - Do NOT include text on the image
 
       CRITICAL - NO BORDERS OR FRAMES:
       - DO NOT add any white border, frame, or edge around the entire image.
@@ -54,7 +67,7 @@ export default async (req: Request) => {
       - Do not create a "card-like" border or frame effect on the outer perimeter.
       - The only frame should be the rectangular window behind the character showing Marina Bay Sands - NOT around the entire image.
 
-      Ensure the face resembles the input photo but stylized to fit the superhero theme.
+      FINAL REMINDER: The face must be immediately recognizable as the exact person in the input photo. Preserve their unique facial characteristics, expression, and features with high fidelity.
     `;
 
         const response = await ai.models.generateContent({

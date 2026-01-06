@@ -41,7 +41,10 @@ export default async (req: Request) => {
       theme: row.theme,
       alignment: row.alignment,
       userName: row.user_name,
-      isPublic: row.is_public,
+      public: row.public,
+      active: row.active,
+      saveCount: row.save_count,
+      ownerClerkId: row.clerk_id,
     };
 
     return new Response(

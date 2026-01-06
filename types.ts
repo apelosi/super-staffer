@@ -29,7 +29,16 @@ export interface CardData {
   theme: ThemeName;
   alignment: Alignment;
   userName: string;          // User's name at time of creation
-  isPublic: boolean;         // Public/private visibility toggle
+  public: boolean;           // Public/private visibility toggle
+  active: boolean;           // Soft delete flag (false = deleted)
+  saveCount: number;         // Number of users who saved this card
+  ownerClerkId?: string;     // Card owner's Clerk ID (for ownership checks)
+}
+
+export interface SavedCard {
+  userClerkId: string;       // User who saved the card
+  cardId: string;            // Reference to original card
+  savedAt: number;           // Timestamp when saved
 }
 
 export interface ThemeDef {
