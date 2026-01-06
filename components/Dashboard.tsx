@@ -4,14 +4,14 @@ import { User, CardData } from '../types';
 import TradingCard from './TradingCard';
 import SuperPowersInput from './SuperPowersInput';
 import CameraCapture from './CameraCapture';
-import { Plus, Sparkles, Camera, Loader2, X, Check } from 'lucide-react';
+import { Plus, Sparkles, Camera, Loader2, X, Check, Wand2, PlusCircle, UserCircle, BarChart3, TrendingUp, Users, Award } from 'lucide-react';
 import Layout from './Layout';
 
 interface DashboardProps {
   user: User;
   cards: CardData[];
   savedCards: CardData[];
-  activeTab: 'my' | 'saved' | 'personalize';
+  activeTab: 'my' | 'saved' | 'stats' | 'personalize';
   onCreateClick: () => void;
   onCardSelect: (card: CardData) => void;
   onSavedCardSelect: (card: CardData) => void;
@@ -85,58 +85,69 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   return (
     <Layout>
-      <main className="container mx-auto px-6 py-12">
+      <main className="container mx-auto px-6 py-6">
         {/* Welcome Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-3xl md:text-5xl font-action mb-4 bg-clip-text text-transparent bg-gradient-to-r from-vibez-blue to-vibez-purple">
+        <div className="text-center mb-6">
+          <h1 className="text-2xl md:text-5xl font-action bg-clip-text text-transparent bg-gradient-to-r from-vibez-blue to-vibez-purple">
             HELLO, {user.name.toUpperCase()}
           </h1>
-          <p className="text-gray-600 text-lg font-comic">
-            {cards.length === 0
-              ? "You have not created a Super Staffer card yet, time to execute your first mission and create one!"
-              : `You have ${cards.length} personalized Super Staffer card${cards.length === 1 ? '' : 's'} in your collection. Create more and share your favorites!`
-            }
-          </p>
         </div>
 
         {/* Tabs */}
-        <div className="max-w-6xl mx-auto mb-12">
+        <div className="max-w-6xl mx-auto mb-8">
           <div className="flex border-b border-gray-200">
             <Link
               to="/cards/my"
-              className={`flex-1 px-3 sm:px-6 md:px-8 py-4 font-action text-sm sm:text-base md:text-lg transition-all relative text-center ${
+              className={`flex-1 px-2 sm:px-6 md:px-8 py-3 font-action text-sm sm:text-base md:text-lg transition-all relative flex flex-col items-center justify-center gap-1 ${
                 activeTab === 'my'
                   ? 'text-vibez-blue'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              MY CARDS
+              <Wand2 className="w-4 h-4" />
+              CREATED
               {activeTab === 'my' && (
                 <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-vibez-blue to-vibez-purple" />
               )}
             </Link>
             <Link
               to="/cards/saved"
-              className={`flex-1 px-3 sm:px-6 md:px-8 py-4 font-action text-sm sm:text-base md:text-lg transition-all relative text-center ${
+              className={`flex-1 px-2 sm:px-6 md:px-8 py-3 font-action text-sm sm:text-base md:text-lg transition-all relative flex flex-col items-center justify-center gap-1 ${
                 activeTab === 'saved'
                   ? 'text-vibez-blue'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              SAVED CARDS
+              <PlusCircle className="w-4 h-4" />
+              ADDED
               {activeTab === 'saved' && (
                 <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-vibez-blue to-vibez-purple" />
               )}
             </Link>
             <Link
+              to="/stats"
+              className={`flex-1 px-2 sm:px-6 md:px-8 py-3 font-action text-sm sm:text-base md:text-lg transition-all relative flex flex-col items-center justify-center gap-1 ${
+                activeTab === 'stats'
+                  ? 'text-vibez-blue'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <BarChart3 className="w-4 h-4" />
+              STATS
+              {activeTab === 'stats' && (
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-vibez-blue to-vibez-purple" />
+              )}
+            </Link>
+            <Link
               to="/personalize"
-              className={`flex-1 px-3 sm:px-6 md:px-8 py-4 font-action text-sm sm:text-base md:text-lg transition-all relative text-center ${
+              className={`flex-1 px-2 sm:px-6 md:px-8 py-3 font-action text-sm sm:text-base md:text-lg transition-all relative flex flex-col items-center justify-center gap-1 ${
                 activeTab === 'personalize'
                   ? 'text-vibez-blue'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              PERSONALIZE
+              <UserCircle className="w-4 h-4" />
+              ME
               {activeTab === 'personalize' && (
                 <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-vibez-blue to-vibez-purple" />
               )}
@@ -202,6 +213,128 @@ const Dashboard: React.FC<DashboardProps> = ({
             )}
           </div>
         )}
+
+        {/* Stats Tab */}
+        {activeTab === 'stats' && (() => {
+          // Calculate stats
+          const totalCreated = cards.length;
+          const deletedCards = cards.filter(c => !c.active).length;
+          const activeCards = cards.filter(c => c.active).length;
+          const publicCards = cards.filter(c => c.active && c.public).length;
+          const cardsAddedByOthers = cards.filter(c => c.active && c.public && c.saveCount > 0).length;
+          const totalAdds = cards.reduce((sum, c) => sum + (c.saveCount || 0), 0);
+
+          // Find most popular card
+          const mostPopularCard = cards
+            .filter(c => c.active && c.public)
+            .sort((a, b) => (b.saveCount || 0) - (a.saveCount || 0))[0];
+
+          // Stats about saved cards
+          const totalSavedCards = savedCards.filter(c => c.active && c.public).length;
+          const mostPopularSavedCard = savedCards
+            .filter(c => c.active && c.public)
+            .sort((a, b) => (b.saveCount || 0) - (a.saveCount || 0))[0];
+
+          return (
+            <div className="max-w-4xl mx-auto space-y-6">
+              <h2 className="text-2xl md:text-3xl font-action text-center mb-8 bg-clip-text text-transparent bg-gradient-to-r from-vibez-blue to-vibez-purple">
+                YOUR SUPER STAFFER STATS
+              </h2>
+
+              {/* Your Cards Stats */}
+              <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-6 md:p-8 border-2 border-vibez-blue/20 shadow-lg">
+                <div className="flex items-center gap-3 mb-6">
+                  <Wand2 className="w-6 h-6 text-vibez-blue" />
+                  <h3 className="font-action text-xl text-gray-900">YOUR CARDS</h3>
+                </div>
+
+                <div className="space-y-4 font-comic text-gray-700">
+                  <div className="flex items-start gap-3">
+                    <TrendingUp className="w-5 h-5 text-vibez-purple mt-1 flex-shrink-0" />
+                    <p>
+                      You have created <span className="font-bold text-vibez-blue">{totalCreated}</span> {totalCreated === 1 ? 'card' : 'cards'}
+                      {deletedCards > 0 && <> and deleted <span className="font-bold text-gray-600">{deletedCards}</span> for a total of</>}
+                      {' '}<span className="font-bold text-vibez-purple">{activeCards}</span> active {activeCards === 1 ? 'card' : 'cards'}.
+                    </p>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <Users className="w-5 h-5 text-vibez-purple mt-1 flex-shrink-0" />
+                    <p>
+                      <span className="font-bold text-vibez-blue">{publicCards}</span> of your active {publicCards === 1 ? 'card' : 'cards'} {publicCards === 1 ? 'has' : 'have'} been made public.
+                    </p>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <Star className="w-5 h-5 text-vibez-purple mt-1 flex-shrink-0" />
+                    <p>
+                      <span className="font-bold text-vibez-blue">{cardsAddedByOthers}</span> of your {cardsAddedByOthers === 1 ? 'card has' : 'cards have'} been added by others
+                      for a total of <span className="font-bold text-vibez-purple">{totalAdds}</span> {totalAdds === 1 ? 'add' : 'adds'}.
+                    </p>
+                  </div>
+
+                  {mostPopularCard && (
+                    <div className="flex items-start gap-3 pt-2 border-t border-vibez-blue/20">
+                      <Award className="w-5 h-5 text-amber-500 mt-1 flex-shrink-0" />
+                      <p>
+                        Your most popular card is{' '}
+                        <button
+                          onClick={() => onCardSelect(mostPopularCard)}
+                          className="font-bold text-vibez-blue hover:text-vibez-purple underline transition-colors"
+                        >
+                          {mostPopularCard.theme} {mostPopularCard.alignment}
+                        </button>
+                        {' '}with <span className="font-bold text-amber-500">{mostPopularCard.saveCount || 0}</span> {(mostPopularCard.saveCount || 0) === 1 ? 'add' : 'adds'}.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Collected Cards Stats */}
+              <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 md:p-8 border-2 border-vibez-purple/20 shadow-lg">
+                <div className="flex items-center gap-3 mb-6">
+                  <PlusCircle className="w-6 h-6 text-vibez-purple" />
+                  <h3 className="font-action text-xl text-gray-900">YOUR COLLECTION</h3>
+                </div>
+
+                <div className="space-y-4 font-comic text-gray-700">
+                  <div className="flex items-start gap-3">
+                    <PlusCircle className="w-5 h-5 text-vibez-purple mt-1 flex-shrink-0" />
+                    <p>
+                      You have collected <span className="font-bold text-vibez-purple">{totalSavedCards}</span> {totalSavedCards === 1 ? 'card' : 'cards'} from other SUPER STAFFERS.
+                    </p>
+                  </div>
+
+                  {mostPopularSavedCard && (
+                    <div className="flex items-start gap-3 pt-2 border-t border-vibez-purple/20">
+                      <Award className="w-5 h-5 text-amber-500 mt-1 flex-shrink-0" />
+                      <p>
+                        The most popular card you've added is{' '}
+                        <button
+                          onClick={() => onSavedCardSelect(mostPopularSavedCard)}
+                          className="font-bold text-vibez-purple hover:text-vibez-blue underline transition-colors"
+                        >
+                          {mostPopularSavedCard.theme} {mostPopularSavedCard.alignment}
+                        </button>
+                        {' '}with <span className="font-bold text-amber-500">{mostPopularSavedCard.saveCount || 0}</span> {(mostPopularSavedCard.saveCount || 0) === 1 ? 'add' : 'adds'}.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Encouragement Message */}
+              <div className="text-center py-6">
+                <p className="font-comic text-lg text-gray-600 leading-relaxed">
+                  Keep up the great work SUPER STAFFER{' '}
+                  <span className="font-bold text-vibez-blue">{user.name}</span>!<br />
+                  Continue to create more, share with others, and add to your collection!
+                </p>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Personalize Tab */}
         {activeTab === 'personalize' && (

@@ -597,6 +597,25 @@ const App: React.FC = () => {
           )
         } />
 
+        <Route path="/stats" element={
+          isSignedIn && hasProfile && localUser ? (
+            <Dashboard
+              user={localUser}
+              cards={cards}
+              savedCards={savedCards}
+              activeTab="stats"
+              onCreateClick={() => navigate('/creator')}
+              onCardSelect={(card) => navigate(`/card/${card.id}`)}
+              onSavedCardSelect={(card) => navigate(`/card/${card.id}`)}
+              onUpdateUser={handleUpdateUser}
+              onDeleteCard={handleDeleteCard}
+              onToggleVisibility={handleToggleVisibility}
+            />
+          ) : (
+            <Navigate to="/" replace />
+          )
+        } />
+
         <Route path="/personalize" element={
           isSignedIn && hasProfile && localUser ? (
             <Dashboard

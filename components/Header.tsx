@@ -7,7 +7,7 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ actions }) => {
     return (
         <header className="fixed top-0 left-0 right-0 z-50 bg-[#0f172a]/95 backdrop-blur-md border-b border-slate-800 shadow-sm">
-            <div className="container mx-auto px-4 h-14 md:h-20 flex items-center justify-between">
+            <div className="container mx-auto px-4 h-12 md:h-20 flex items-center justify-between">
                 <div className="flex items-center gap-2 md:gap-3 group cursor-pointer hover:opacity-80 transition-opacity">
                     <img
                         src="/logos/ss-logo-rich-64x64.png"

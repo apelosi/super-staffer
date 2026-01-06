@@ -143,10 +143,11 @@ The app uses React Router with the following routes:
 1. **/** → ParallaxHero (landing page)
 2. **/onboarding** → Onboarding (new user 4-step profile creation: name, selfie, super powers, origin story)
 3. **/creator** → CardCreator (generate new card with theme selection)
-4. **/cards/my** → Dashboard (My Cards tab - cards you created)
-5. **/cards/saved** → Dashboard (Saved Cards tab - cards you collected)
-6. **/personalize** → Dashboard (Personalize tab - update profile: name, selfie, super powers, origin story)
-7. **/card/:id** → PublicCardView (view any card - public card or your own card)
+4. **/cards/my** → Dashboard (Created tab - cards you created)
+5. **/cards/saved** → Dashboard (Added tab - cards you collected from others)
+6. **/stats** → Dashboard (Stats tab - view your SUPER STAFFER statistics)
+7. **/personalize** → Dashboard (Me tab - update profile: name, selfie, super powers, origin story)
+8. **/card/:id** → PublicCardView (view any card - public card or your own card)
 
 **User Authentication Flow:**
 - Clerk handles all authentication (sign-up, sign-in, sign-out)
@@ -171,13 +172,20 @@ The app uses React Router with the following routes:
 - Back button does NOT update during session (set once on mount)
 - This ensures consistent behavior when adding/removing from collection
 
+**Stats Tab Features:**
+- **Your Cards Stats**: Total created, active cards, public cards, cards added by others, total adds, most popular card
+- **Your Collection Stats**: Total saved cards, most popular saved card
+- Clickable card links navigate to card detail view
+- Visual presentation with icons, color-coded stats, and gradient boxes
+- Encouragement message with user's name
+
 ### Key Components
 
 - **ParallaxHero** ([components/ParallaxHero.tsx](components/ParallaxHero.tsx)): Animated landing page with parallax effect
 - **Onboarding** ([components/Onboarding.tsx](components/Onboarding.tsx)): 4-step onboarding flow (name, selfie, super powers, origin story) with optional fields
 - **CameraCapture** ([components/CameraCapture.tsx](components/CameraCapture.tsx)): Camera access and photo capture, outputs base64
 - **CardCreator** ([components/CardCreator.tsx](components/CardCreator.tsx)): Theme/alignment selection + Gemini API integration
-- **Dashboard** ([components/Dashboard.tsx](components/Dashboard.tsx)): Tabbed interface showing "My Cards" and "Saved Cards"
+- **Dashboard** ([components/Dashboard.tsx](components/Dashboard.tsx)): Tabbed interface with 4 tabs (Created, Added, Stats, Me) with icons, compact layout optimized for mobile
 - **TradingCard** ([components/TradingCard.tsx](components/TradingCard.tsx)): Displays individual card with theme styling
 - **SingleCardView** ([components/SingleCardView.tsx](components/SingleCardView.tsx)): Full card detail view with flip animation, download, and action buttons
 
@@ -349,6 +357,10 @@ await new Promise(resolve => setTimeout(resolve, 50));
 - ✅ Dashboard tabs mobile crowding (responsive padding/text size, equal width distribution)
 - ✅ Onboarding flow clarified (goes to Dashboard, not CardCreator)
 - ✅ Inconsistent card generation style (removed "hyper-realistic" language, strengthened comic book style requirements)
+- ✅ Dashboard welcome message updated (shows card counts consistently)
+- ✅ Dashboard mobile optimization (reduced header height, compact layout, single-word tab labels with icons)
+- ✅ Stats tab added (displays user statistics with visual presentation)
+- ✅ Tab layout optimized (icons above text in vertical layout to reduce horizontal crowding)
 
 ### Future Enhancements (Optional)
 
