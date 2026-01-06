@@ -104,7 +104,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           <div className="flex border-b border-gray-200">
             <Link
               to="/cards/my"
-              className={`px-8 py-4 font-action text-lg transition-all relative ${
+              className={`flex-1 px-3 sm:px-6 md:px-8 py-4 font-action text-sm sm:text-base md:text-lg transition-all relative text-center ${
                 activeTab === 'my'
                   ? 'text-vibez-blue'
                   : 'text-gray-500 hover:text-gray-700'
@@ -117,7 +117,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             </Link>
             <Link
               to="/cards/saved"
-              className={`px-8 py-4 font-action text-lg transition-all relative ${
+              className={`flex-1 px-3 sm:px-6 md:px-8 py-4 font-action text-sm sm:text-base md:text-lg transition-all relative text-center ${
                 activeTab === 'saved'
                   ? 'text-vibez-blue'
                   : 'text-gray-500 hover:text-gray-700'
@@ -130,7 +130,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             </Link>
             <Link
               to="/personalize"
-              className={`px-8 py-4 font-action text-lg transition-all relative ${
+              className={`flex-1 px-3 sm:px-6 md:px-8 py-4 font-action text-sm sm:text-base md:text-lg transition-all relative text-center ${
                 activeTab === 'personalize'
                   ? 'text-vibez-blue'
                   : 'text-gray-500 hover:text-gray-700'

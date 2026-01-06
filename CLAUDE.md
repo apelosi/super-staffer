@@ -141,17 +141,26 @@ GEMINI_API_KEY=your_gemini_api_key
 The app uses React Router with the following routes:
 
 1. **/** → ParallaxHero (landing page)
-2. **/onboarding** → Onboarding (new user creates profile with selfie)
+2. **/onboarding** → Onboarding (new user 4-step profile creation: name, selfie, super powers, origin story)
 3. **/creator** → CardCreator (generate new card with theme selection)
 4. **/cards/my** → Dashboard (My Cards tab - cards you created)
 5. **/cards/saved** → Dashboard (Saved Cards tab - cards you collected)
-6. **/card/:id** → PublicCardView (view any card - public card or your own card)
+6. **/personalize** → Dashboard (Personalize tab - update profile: name, selfie, super powers, origin story)
+7. **/card/:id** → PublicCardView (view any card - public card or your own card)
 
 **User Authentication Flow:**
 - Clerk handles all authentication (sign-up, sign-in, sign-out)
-- New users are redirected to `/onboarding` to create profile (name + selfie)
-- After onboarding, users go to CardCreator to generate first card
+- New users are redirected to `/onboarding` to create profile (name, selfie, optional super powers, optional origin story)
+- After onboarding completes, users are taken to Dashboard (`/cards/my`) where they can create their first card
 - All routes except `/` and `/card/:id` require authentication
+
+**Onboarding Flow Details:**
+1. **Step 1: Name** - User enters their real name or alias (required)
+2. **Step 2: Selfie** - Camera capture for profile photo (required)
+3. **Step 3: Super Powers** - User can add up to 5 strengths (optional, can skip)
+4. **Step 4: Origin Story** - User writes a 256-character origin story (optional, can skip)
+5. **Completion** - User profile saved to database, navigates to `/cards/my` (Dashboard)
+6. User clicks "CREATE NEW CARD" button to start their first card generation
 
 **Card Viewing Logic (Important):**
 - `/card/:id` is the ONLY route for viewing individual cards
@@ -165,7 +174,7 @@ The app uses React Router with the following routes:
 ### Key Components
 
 - **ParallaxHero** ([components/ParallaxHero.tsx](components/ParallaxHero.tsx)): Animated landing page with parallax effect
-- **Onboarding** ([components/Onboarding.tsx](components/Onboarding.tsx)): Captures user name + selfie via CameraCapture
+- **Onboarding** ([components/Onboarding.tsx](components/Onboarding.tsx)): 4-step onboarding flow (name, selfie, super powers, origin story) with optional fields
 - **CameraCapture** ([components/CameraCapture.tsx](components/CameraCapture.tsx)): Camera access and photo capture, outputs base64
 - **CardCreator** ([components/CardCreator.tsx](components/CardCreator.tsx)): Theme/alignment selection + Gemini API integration
 - **Dashboard** ([components/Dashboard.tsx](components/Dashboard.tsx)): Tabbed interface showing "My Cards" and "Saved Cards"
@@ -210,23 +219,29 @@ Themes are defined in [constants.ts](constants.ts) with icons, colors, and descr
 - Takes user selfie (base64), theme, and alignment as JSON payload
 - Returns generated trading card image URL stored in Cloudinary
 
-**Critical Prompt Engineering** (Lines 33-71):
-The Gemini prompt was carefully engineered to prioritize facial likeness over theme aesthetics:
+**Critical Prompt Engineering** (Lines 33-85):
+The Gemini prompt was carefully engineered to ensure consistent comic book style while preserving facial likeness:
 
-1. **FACIAL LIKENESS REQUIREMENTS** section appears FIRST (before style/composition)
-2. 11 specific facial preservation instructions
-3. Explicit conflict resolution: "prioritize likeness over theme"
-4. Uses "depicted as" instead of "transformed into" (reduces facial alteration)
-5. Separates face (realistic) from costume/environment (stylized)
-6. Constrains poses to ensure face visibility (forward or 3/4 angle)
-7. **Marina Bay Sands backdrop** as rectangular "window" behind character
-8. **NO borders or frames** on outer image (canvas edge-to-edge)
+1. **ARTISTIC STYLE section appears FIRST** - Establishes comic book art style upfront (NOT photorealistic)
+   - Removed "hyper-realistic" language that caused photorealistic outputs
+   - Explicitly states "illustrated comic book art, NOT a photograph"
+   - Specifies bold ink outlines, cell-shading, and vibrant colors
+   - References artist styles: "Alex Ross meets Jim Lee"
+2. **FACIAL LIKENESS REQUIREMENTS** section (11 specific instructions)
+   - Preserves exact facial features while rendering in comic style
+   - Explicit conflict resolution: "prioritize likeness over theme"
+   - Constrains poses to ensure face visibility (forward or 3/4 angle)
+3. **Marina Bay Sands backdrop** must be illustrated/stylized (NOT a photograph)
+   - Rectangular "window" behind character showing MBS
+   - Prevents photorealistic building from appearing in foreground
+4. **NO borders or frames** on outer image (canvas edge-to-edge)
+5. **FINAL REMINDER** reinforces: comic book art style, facial likeness, stylized MBS
 
 **Why This Matters:**
-- Initial implementation had poor facial likeness (generic superhero faces, especially for females)
-- Root cause: 1 line of likeness instruction vs. 4 sections of style instructions
-- Solution: Reordered and strengthened likeness requirements to 11 detailed instructions
-- Result: AI now preserves user's actual facial features while adding superhero costume/powers
+- Previous "hyper-realistic" + "realistic facial features" language caused inconsistent outputs (sometimes photorealistic)
+- Root cause: Mixed signals between "realistic" and "comic book style"
+- Solution: Removed all "realistic" language, strengthened comic book style requirements FIRST, then facial likeness
+- Result: Consistent 1990s comic book illustrated style with accurate facial preservation
 
 ### State Management
 
@@ -331,6 +346,9 @@ await new Promise(resolve => setTimeout(resolve, 50));
 - ✅ Routing refactor (consolidated /saved/:id into /card/:id)
 - ✅ VIBEZ_LOGO_SVG removed (now using PNG logo via img tag)
 - ✅ Database connection refactored (centralized getDb() with fallback support)
+- ✅ Dashboard tabs mobile crowding (responsive padding/text size, equal width distribution)
+- ✅ Onboarding flow clarified (goes to Dashboard, not CardCreator)
+- ✅ Inconsistent card generation style (removed "hyper-realistic" language, strengthened comic book style requirements)
 
 ### Future Enhancements (Optional)
 

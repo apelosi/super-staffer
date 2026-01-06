@@ -444,8 +444,8 @@ const App: React.FC = () => {
         }
       }
 
-      // Navigate to card creator for first card
-      navigate('/creator');
+      // Navigate to dashboard after onboarding completes
+      navigate('/cards/my');
     } catch (error) {
       console.error('Failed to complete onboarding:', error);
       alert('Failed to save profile. Please try again.');
