@@ -30,7 +30,9 @@ export default async (req: Request) => {
         const ai = new GoogleGenAI({ apiKey });
         const model = "gemini-2.5-flash-image"; // Using the flash model as requested
 
-        const prompt = `[Style: Masterpiece Comic Book Art, ${theme} Aesthetic]
+        const prompt = `Describe the physical appearance of the person in this photo briefly but precisely (gender, hair color/style, skin tone, facial features, glasses/beard if any). Do not describe the background or clothing.
+
+[Style: Masterpiece Comic Book Art, ${theme} Aesthetic]
 [Subject: ${alignment === 'Hero' ? 'Superhero' : 'Supervillain'}]
 [Action: Dynamic action pose with dramatic energy effects]
 [Character Reference: Match the face of the uploaded image]
