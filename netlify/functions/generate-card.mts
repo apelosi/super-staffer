@@ -30,23 +30,35 @@ export default async (req: Request) => {
         const ai = new GoogleGenAI({ apiKey });
         const model = "gemini-2.5-flash-image"; // Using the flash model as requested
 
-        const prompt = `Create a 1990s Marvel-style comic book trading card illustration.
+        const prompt = `Describe the person's physical appearance precisely: gender, hair color/style, skin tone, facial features (eye shape, nose shape, lip shape, face shape), glasses/beard if any. Do not describe background or clothing.
 
-STYLE: Classic comic book art with bold ink outlines, vibrant colors, cell-shading. NOT photorealistic.
+Create a 1990s Marvel-style comic book trading card (Marvel Universe Series III 1992 style).
 
-CHARACTER: ${theme}-themed ${alignment} in dynamic action pose.
-- Face MUST closely match the uploaded photo (hair, facial structure, nose size/shape, features)
-- Face visible at forward or 3/4 angle
-- Costume matches ${theme} theme
+SUBJECT: ${theme}-themed ${alignment} with the EXACT face from the input photo.
 
-BACKGROUND: Cosmic space with stars and nebula.
-- Small rectangular window far behind character showing Marina Bay Sands (illustrated, tiny, distant)
-- Character always in front, MBS always in background window
+STYLE: Illustrated comic book art (Alex Ross meets Jim Lee).
+- Bold ink outlines on all elements
+- Comic book cell-shading, vibrant saturated colors
+- NOT photorealistic - this is illustrated superhero art
+
+FACIAL LIKENESS (CRITICAL):
+- Face must be immediately recognizable as the person in the photo
+- Preserve exact face shape, bone structure, eye shape, nose shape, lip shape
+- Maintain skin tone, hair color/style from input photo
+- Keep all distinctive features (beauty marks, expression, smile)
+- If conflict between likeness and theme, prioritize likeness
+- Render in comic style but facial accuracy is top priority
+
+COMPOSITION:
+1. Dynamic action pose, face clearly visible (forward or 3/4 angle)
+2. Background: Cosmic space/nebula with stars (illustrated, not photo)
+3. Behind character's torso: rectangular "window" or portal frame showing Marina Bay Sands hotel (3 towers with skypark boat). MBS must be illustrated/stylized inside this window frame, appearing as scenic backdrop behind the character.
 
 RULES:
-- No logos, text, or symbols anywhere
-- No border or frame on image edges
-- Image fills canvas edge-to-edge`;
+- Costume/powers match ${theme} theme
+- No text, logos, or symbols anywhere
+- No border on image edges, fills canvas edge-to-edge
+- MBS must be illustrated, not a photograph`;
 
         const response = await ai.models.generateContent({
             model: model,
