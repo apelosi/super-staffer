@@ -30,35 +30,35 @@ export default async (req: Request) => {
         const ai = new GoogleGenAI({ apiKey });
         const model = "gemini-2.5-flash-image"; // Using the flash model as requested
 
-        const prompt = `Describe the person's physical appearance precisely: gender, hair color/style, skin tone, facial features (eye shape, nose shape, lip shape, face shape), glasses/beard if any. Do not describe background or clothing.
+        const prompt = `[Style: Masterpiece Comic Book Art, ${theme} Aesthetic, Classic 1990s Trading Card Style (Marvel Universe Series III 1992)]
+[Subject: ${alignment === 'Hero' ? 'Superhero' : 'Supervillain'}]
+[Action: Dynamic superhero action pose with dramatic energy effects]
+[Character Reference: Match the face of the uploaded image]
 
-Create a 1990s Marvel-style comic book trading card (Marvel Universe Series III 1992 style).
+ARTISTIC STYLE - 1990s Comic Book Illustration:
+- Bold, clean ink outlines on all elements (character, costume, background)
+- Traditional comic book cell-shading with vibrant, saturated colors
+- Illustrated superhero art style (Alex Ross meets Jim Lee)
+- NOT photorealistic - this is hand-drawn comic book art
 
-SUBJECT: ${theme}-themed ${alignment} with the EXACT face from the input photo.
-
-STYLE: Illustrated comic book art (Alex Ross meets Jim Lee).
-- Bold ink outlines on all elements
-- Comic book cell-shading, vibrant saturated colors
-- NOT photorealistic - this is illustrated superhero art
-
-FACIAL LIKENESS (CRITICAL):
-- Face must be immediately recognizable as the person in the photo
+FACIAL LIKENESS REQUIREMENTS:
+- The face must be immediately recognizable as the person in the input photo
 - Preserve exact face shape, bone structure, eye shape, nose shape, lip shape
-- Maintain skin tone, hair color/style from input photo
-- Keep all distinctive features (beauty marks, expression, smile)
-- If conflict between likeness and theme, prioritize likeness
-- Render in comic style but facial accuracy is top priority
+- Maintain accurate skin tone, hair color, and hairstyle from the photo
+- Keep all distinctive facial features (beauty marks, expressions, smile characteristics)
+- Render in comic book illustration style while maintaining facial accuracy
+- If any conflict between theme and likeness, prioritize facial likeness
 
 COMPOSITION:
-1. Dynamic action pose, face clearly visible (forward or 3/4 angle)
-2. Background: Cosmic space/nebula with stars (illustrated, not photo)
-3. Behind character's torso: rectangular "window" or portal frame showing Marina Bay Sands hotel (3 towers with skypark boat). MBS must be illustrated/stylized inside this window frame, appearing as scenic backdrop behind the character.
+1. Character in dramatic action pose, face clearly visible (forward or 3/4 angle)
+2. Background: Deep cosmic space/nebula with stars (illustrated, not photographic)
+3. Behind the character's torso: A rectangular "window" or portal frame containing Marina Bay Sands hotel in Singapore (three towers with skypark boat on top) as illustrated scenic backdrop
 
-RULES:
-- Costume/powers match ${theme} theme
-- No text, logos, or symbols anywhere
-- No border on image edges, fills canvas edge-to-edge
-- MBS must be illustrated, not a photograph`;
+REQUIREMENTS:
+- Costume and powers match ${theme} theme
+- Marina Bay Sands must be illustrated/stylized, not a photograph
+- No text, logos, or symbols anywhere on the image
+- No border or frame on outer image edges - fills canvas edge-to-edge`;
 
         const response = await ai.models.generateContent({
             model: model,
