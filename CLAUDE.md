@@ -2,6 +2,17 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Instructions for Claude Code
+
+**IMPORTANT**: As we work together, whenever there are:
+- New requirements or features added
+- Changes to existing requirements or implementations
+- Architecture decisions made
+- Bugs fixed or issues resolved
+- Dependencies or configuration updated
+
+You MUST automatically update this CLAUDE.md file to reflect those changes. Do NOT ask for permission to update this file - just make the updates and inform me what was changed.
+
 ## Project Overview
 
 SuperStaffer is a React-based web app that creates superhero trading cards from user selfies using Google's Gemini AI. Built for Vibez Ventures as a team-building experience at company outings, it allows colleagues to transform themselves into superheroes or villains with personalized trading cards.
@@ -41,7 +52,7 @@ Generated cards must match the style of **Marvel Universe Series III (1992)** tr
 - User's name (top left) - font size matching "SUPER STAFFERS" text (36px italic)
 - Superhero theme name (bottom left)
 - "SUPER STAFFERS" text (top right)
-- **vv-logo-square-alpha.png** image file in bottom right corner at 50px size (half the original size, NOT a generated V logo)
+- **SuperStaffer logo** (`/logos/ss-logo-rich-64x64.png`) in bottom right corner at 50px size
 - 1990s comic book aesthetic with vibrant colors and realistic textures
 
 ### 12 Superhero Themes
@@ -303,16 +314,23 @@ await new Promise(resolve => setTimeout(resolve, 50));
 2. **Gemini API rate limits** apply to card generation
 3. **Base64 selfie storage** - Selfies stored as base64 strings in database (large payload, but necessary for AI API)
 4. **Single Gemini model** - Only using `gemini-2.5-flash-image` (could test other models for better quality)
+5. **iCloud Drive development issues** - Project stored in iCloud Drive can cause:
+   - `npm install` failures (esbuild platform mismatch errors)
+   - `.netlify/plugins` directory corruption (ENOTEMPTY errors)
+   - **Solution**: Run `rm -rf node_modules package-lock.json && npm install` to reinstall with correct platform binaries
+   - **Better solution**: Move project to local directory (e.g., `~/Development/`) instead of iCloud Drive
 
 ### Outstanding Issues to Address
 
-**None currently identified** - All major bugs have been resolved in this session:
+**None currently identified** - All major bugs have been resolved:
 - ✅ Privacy toggle UX (no popup, loading feedback)
 - ✅ Download card issues (border removal, filename consistency)
 - ✅ Card generation likeness (strengthened prompt)
 - ✅ Race condition after card creation (50ms delay)
 - ✅ Collection button UX (consistent loading states, no popups)
 - ✅ Routing refactor (consolidated /saved/:id into /card/:id)
+- ✅ VIBEZ_LOGO_SVG removed (now using PNG logo via img tag)
+- ✅ Database connection refactored (centralized getDb() with fallback support)
 
 ### Future Enhancements (Optional)
 
@@ -332,6 +350,34 @@ Per the original brief, this is a **team-building experience** for company outin
 - Collectibility (unlimited card creation + save others' cards)
 - Shareability (public links + PNG download)
 - Privacy control (public/private toggle per card)
+
+## Public Folder Organization
+
+**Structure:**
+```
+/public
+├── favicon.svg, favicon.ico, favicon-96x96.png (favicons - must stay at root)
+├── apple-touch-icon.png, site.webmanifest (PWA files - must stay at root)
+├── web-app-manifest-192x192.png, web-app-manifest-512x512.png (PWA icons - must stay at root)
+├── /logos (all SuperStaffer logo variants)
+│   ├── ss-logo-rich-32x32.png (used in Footer)
+│   ├── ss-logo-rich-64x64.png (used in Header, SingleCardView card backs)
+│   ├── ss-logo-rich-128x128.png (used in LoadingScreen)
+│   ├── ss-logo-rich-256x256.png (used in ParallaxHero)
+│   ├── ss-logo-rich-512x512.png, ss-logo-rich-1024x1024.png (unused, kept for future)
+│   └── ss-logo-flat-*.png (6 flat variants, unused, kept for future)
+└── /characters (all theme character images for parallax hero)
+    ├── ss-cyberpunk-hero.png, ss-medieval-hero.png, ss-mutant-hero.png
+    ├── ss-ninja-hero.png, ss-noir-hero.png, ss-space-hero.png
+    ├── ss-elemental-villain.png, ss-galactic-villain.png, ss-mecha-villain.png
+    └── ss-mystic-villain.png, ss-steampunk-villain.png, ss-urban-villain.png
+```
+
+**Important Notes:**
+- Favicon files MUST remain at `/public` root level (referenced by index.html and site.webmanifest)
+- Logo files are in `/public/logos/` subfolder (referenced as `/logos/ss-logo-*.png` in components)
+- Character images are in `/public/characters/` subfolder (referenced dynamically as `/characters/ss-${theme.id}-${alignment}.png`)
+- All image paths are absolute from public root (e.g., `/logos/ss-logo-rich-64x64.png`, NOT `../public/logos/...`)
 
 ## Critical Files Reference
 
@@ -355,6 +401,14 @@ Per the original brief, this is a **team-building experience** for company outin
 ### Netlify Functions
 - [netlify/functions/generate-card.mts](netlify/functions/generate-card.mts) - Gemini AI card generation (contains critical prompt)
 - [netlify/functions/db-*.mts](netlify/functions/) - Database CRUD operations (users, cards, saved_cards)
+- [netlify/functions/_shared/db.mts](netlify/functions/_shared/db.mts) - Shared database connection helper with fallback support
+
+**Database Connection Pattern:**
+All database functions use a shared `getDb()` helper that:
+- Checks both `NETLIFY_DATABASE_URL` and `DATABASE_URL` environment variables
+- Provides fallback support for different deployment environments (production uses NETLIFY_DATABASE_URL, local dev can use either)
+- Centralizes error handling for missing database configuration
+- Makes maintenance easier (single source of truth for connection logic)
 
 ## Architecture Decisions (Why Things Are Built This Way)
 

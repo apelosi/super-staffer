@@ -1,4 +1,4 @@
-import { neon } from '@neondatabase/serverless';
+import { getDb } from './_shared/db.mts';
 
 /**
  * Netlify Function: Get user profile from database
@@ -8,9 +8,8 @@ export default async (req: Request) => {
     return new Response('Method not allowed', { status: 405 });
   }
 
-  const sql = neon(process.env.NETLIFY_DATABASE_URL!);
-
   try {
+    const sql = getDb();
     const { clerkId } = await req.json();
 
     if (!clerkId) {

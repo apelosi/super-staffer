@@ -1,5 +1,5 @@
 import type { Context } from '@netlify/functions';
-import { neon } from '@neondatabase/serverless';
+import { getDb } from './_shared/db.mts';
 
 export default async (req: Request, context: Context) => {
   if (req.method !== 'POST') {
@@ -17,7 +17,7 @@ export default async (req: Request, context: Context) => {
       });
     }
 
-    const sql = neon(process.env.NETLIFY_DATABASE_URL!);
+    const sql = getDb();
 
     // Check if card exists, is active, and is public
     const [card] = await sql`

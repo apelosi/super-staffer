@@ -1,4 +1,4 @@
-import { neon } from '@neondatabase/serverless';
+import { getDb } from './_shared/db.mts';
 
 /**
  * Netlify Function: Soft delete a card (sets active = FALSE)
@@ -8,7 +8,7 @@ export default async (req: Request) => {
     return new Response('Method not allowed', { status: 405 });
   }
 
-  const sql = neon(process.env.NETLIFY_DATABASE_URL!);
+  const sql = getDb();
 
   try {
     const { cardId } = await req.json();

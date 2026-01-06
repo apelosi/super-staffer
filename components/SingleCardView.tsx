@@ -555,7 +555,7 @@ const SingleCardView: React.FC<SingleCardViewProps> = ({
                     {/* Header Section - Compact */}
                     <div className="flex items-center justify-between mb-3">
                       <div className="w-8 h-8 opacity-80">
-                        <div dangerouslySetInnerHTML={{ __html: VIBEZ_LOGO_SVG }} />
+                        <img src="/logos/ss-logo-rich-64x64.png" alt="Super Staffers" className="w-full h-full object-contain" />
                       </div>
                       <div className="flex items-center gap-1.5">
                         <span className="font-action text-[10px] text-white/60 uppercase tracking-widest">
