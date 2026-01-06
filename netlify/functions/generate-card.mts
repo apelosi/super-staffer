@@ -31,31 +31,34 @@ export default async (req: Request) => {
         const model = "gemini-2.5-flash-image"; // Using the flash model as requested
 
         const prompt = `[Style: Masterpiece Comic Book Art, ${theme} Aesthetic, Classic 1990s Trading Card Style (Marvel Universe Series III 1992)]
-[Subject: ${alignment === 'Hero' ? 'Superhero' : 'Supervillain'}]
-[Action: Dynamic superhero action pose with dramatic energy effects]
-[Character Reference: Match the face of the uploaded image]
+[Subject: Person from uploaded image in ${alignment} role]
+[Action: Dynamic action pose with dramatic energy effects]
+[Character Reference: EXACT face from uploaded image - do not idealize or superhero-ize the face]
 
 ARTISTIC STYLE - 1990s Comic Book Illustration:
 - Bold, clean ink outlines on all elements (character, costume, background)
 - Traditional comic book cell-shading with vibrant, saturated colors
-- Illustrated superhero art style (Alex Ross meets Jim Lee)
-- NOT photorealistic - this is hand-drawn comic book art
+- Comic book illustration style (NOT photorealistic)
+- Hand-drawn comic book art aesthetic
 
-FACIAL LIKENESS REQUIREMENTS:
-- The face must be immediately recognizable as the person in the input photo
-- Preserve exact face shape, bone structure, eye shape, nose shape, lip shape
-- Maintain accurate skin tone, hair color, and hairstyle from the photo
-- Keep all distinctive facial features (beauty marks, expressions, smile characteristics)
-- Render in comic book illustration style while maintaining facial accuracy
-- If any conflict between theme and likeness, prioritize facial likeness
+THE PERSON'S FACE (CRITICAL - READ CAREFULLY):
+- Draw the ACTUAL person's face from the photo in comic book style
+- DO NOT make the face look like a generic superhero/supervillain face
+- DO NOT idealize, beautify, or alter facial features to look more heroic
+- Preserve the REAL nose size and shape from the photo (not a smaller superhero nose)
+- Preserve the REAL face shape, bone structure, eye shape, lip shape from the photo
+- Keep the person's actual skin tone, hair color, hairstyle, and facial expression
+- The face should look like: "This exact person drawn in comic book style" NOT "A superhero who vaguely resembles this person"
+- Render face in comic book illustration style while keeping it recognizably this specific person
 
 COMPOSITION:
-1. Character in dramatic action pose, face clearly visible (forward or 3/4 angle)
+1. Character in dynamic action pose, face clearly visible (forward or 3/4 angle)
 2. Background: Deep cosmic space/nebula with stars (illustrated, not photographic)
 3. Behind the character's torso: A rectangular "window" or portal frame containing Marina Bay Sands hotel in Singapore (three towers with skypark boat on top) as illustrated scenic backdrop
 
-REQUIREMENTS:
-- Costume and powers match ${theme} theme
+COSTUME AND POWERS:
+- ${theme} themed costume and powers
+- ${alignment} role (heroic or villainous aesthetic)
 - Marina Bay Sands must be illustrated/stylized, not a photograph
 - No text, logos, or symbols anywhere on the image
 - No border or frame on outer image edges - fills canvas edge-to-edge`;
