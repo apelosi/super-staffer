@@ -4,6 +4,7 @@ import { Routes, Route, useNavigate, useParams, Navigate, useLocation } from 're
 import { storage } from './services/storage';
 import { User, CardData, ThemeName, Alignment } from './types';
 import { pendingCardSave } from './utils/pendingCardSave';
+import { compressBase64Image } from './utils/imageCompression';
 import ParallaxHero from './components/ParallaxHero';
 import Onboarding from './components/Onboarding';
 import Dashboard from './components/Dashboard';
@@ -455,28 +456,39 @@ const App: React.FC = () => {
   const handleCardCreated = async (imageUrl: string, theme: ThemeName, alignment: Alignment) => {
     if (!clerkUser || !localUser) return;
 
-    const newCard: CardData = {
-      id: Date.now().toString(),
-      timestamp: Date.now(),
-      imageUrl,
-      theme,
-      alignment,
-      userName: localUser.name,
-      public: false,
-      active: true,
-      saveCount: 0,
-      ownerClerkId: clerkUser.id,
-    };
+    try {
+      // Compress the image to reduce database storage size
+      // Gemini generates large PNGs - compress to JPEG with 85% quality
+      console.log('[handleCardCreated] Original image size:', imageUrl.length, 'chars');
+      const compressedImageUrl = await compressBase64Image(imageUrl, 800, 0.85);
+      console.log('[handleCardCreated] Compressed image size:', compressedImageUrl.length, 'chars');
 
-    await storage.saveCard(newCard, clerkUser.id);
-    setCards(prev => [...prev, newCard]);
+      const newCard: CardData = {
+        id: Date.now().toString(),
+        timestamp: Date.now(),
+        imageUrl: compressedImageUrl,
+        theme,
+        alignment,
+        userName: localUser.name,
+        public: false,
+        active: true,
+        saveCount: 0,
+        ownerClerkId: clerkUser.id,
+      };
 
-    // Small delay to ensure IndexedDB transaction commits before navigation
-    // This prevents race condition where PublicCardView loads before card is queryable
-    await new Promise(resolve => setTimeout(resolve, 50));
+      await storage.saveCard(newCard, clerkUser.id);
+      setCards(prev => [...prev, newCard]);
 
-    // Navigate to single card view
-    navigate(`/card/${newCard.id}`);
+      // Small delay to ensure IndexedDB transaction commits before navigation
+      // This prevents race condition where PublicCardView loads before card is queryable
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      // Navigate to single card view
+      navigate(`/card/${newCard.id}`);
+    } catch (error) {
+      console.error('[handleCardCreated] Failed to save card:', error);
+      alert('Failed to save card. Please try again.');
+    }
   };
 
   const handleDeleteCard = async (id: string) => {

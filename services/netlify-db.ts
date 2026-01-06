@@ -199,4 +199,26 @@ export const db = {
 
     return response.json();
   },
+
+  /**
+   * Get global statistics (rankings, unique savers, etc.)
+   */
+  getGlobalStats: async (clerkId: string): Promise<{
+    totalAddsRank: number;
+    topCardRank: number;
+    totalUsers: number;
+    uniqueSavers: number;
+  }> => {
+    const response = await fetch('/.netlify/functions/db-get-global-stats', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clerkId }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to get global stats');
+    }
+
+    return response.json();
+  },
 };

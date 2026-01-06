@@ -13,7 +13,15 @@ export default async (req: Request) => {
   try {
     const { card, clerkId } = await req.json();
 
+    console.log('[db-save-card] Received request:', {
+      cardId: card?.id,
+      clerkId,
+      hasImageUrl: !!card?.imageUrl,
+      imageUrlLength: card?.imageUrl?.length
+    });
+
     if (!card || !clerkId) {
+      console.error('[db-save-card] Missing required fields:', { hasCard: !!card, hasClerkId: !!clerkId });
       return new Response(
         JSON.stringify({ error: 'Missing card or clerkId' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
@@ -22,7 +30,7 @@ export default async (req: Request) => {
 
     await sql`
       INSERT INTO cards (
-        id, clerk_id, timestamp, image_url, theme, alignment, user_name, public, active, save_count
+        id, clerk_id, timestamp, image_url, theme, alignment, user_name, "public", active, save_count
       )
       VALUES (
         ${card.id},
@@ -38,14 +46,22 @@ export default async (req: Request) => {
       )
     `;
 
+    console.log('[db-save-card] Successfully saved card:', card.id);
+
     return new Response(
       JSON.stringify({ success: true }),
       { headers: { 'Content-Type': 'application/json' } }
     );
   } catch (error: any) {
-    console.error('DB error:', error);
+    console.error('[db-save-card] Database error:', error);
+    console.error('[db-save-card] Error details:', {
+      message: error.message,
+      code: error.code,
+      detail: error.detail,
+      hint: error.hint
+    });
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error.message, detail: error.detail || 'No additional details' }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }

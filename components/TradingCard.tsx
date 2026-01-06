@@ -28,11 +28,7 @@ const TradingCard: React.FC<TradingCardProps> = ({ card, user, onDelete, variant
       canvas.width = width;
       canvas.height = height;
 
-      // 1. Fill white background (no border, sharp corners)
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, width, height);
-
-      // 2. Load and Draw Main Image (covers full canvas, no border)
+      // 1. Load and Draw Main Image (covers full canvas, no border - NO white background)
       const img = new Image();
       img.crossOrigin = "anonymous";
 
@@ -63,29 +59,35 @@ const TradingCard: React.FC<TradingCardProps> = ({ card, user, onDelete, variant
 
       ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
 
-      // 3. Text Overlays
+      // 3. Text Overlays (matching website display proportions)
+      const userName = user?.name || card.userName;
 
-      // Top Left: Name (same font size as SUPER STAFFERS)
-      ctx.font = 'italic 900 36px "Arial", sans-serif';
+      // Top Left: Name
+      ctx.font = 'italic 900 28px "Arial", sans-serif';
       ctx.fillStyle = 'white';
       ctx.shadowColor = 'black';
-      ctx.shadowBlur = 10;
-      ctx.lineWidth = 3;
-      const userName = user?.name || card.userName;
-      ctx.strokeText(userName.toUpperCase(), 40, 65);
-      ctx.fillText(userName.toUpperCase(), 40, 65);
+      ctx.shadowBlur = 8;
+      ctx.lineWidth = 2;
+      ctx.strokeText(userName.toUpperCase(), 40, 60);
+      ctx.fillText(userName.toUpperCase(), 40, 60);
 
       // Top Right: SUPER STAFFERS
-      ctx.font = 'italic 900 36px "Arial", sans-serif';
+      ctx.font = 'italic 900 28px "Arial", sans-serif';
       ctx.fillStyle = '#FFD700'; // Gold
+      ctx.shadowColor = 'black';
+      ctx.shadowBlur = 8;
+      ctx.lineWidth = 2;
       ctx.textAlign = 'right';
-      ctx.strokeText("SUPER STAFFERS", width - 40, 65);
-      ctx.fillText("SUPER STAFFERS", width - 40, 65);
+      ctx.strokeText("SUPER STAFFERS", width - 40, 60);
+      ctx.fillText("SUPER STAFFERS", width - 40, 60);
       ctx.textAlign = 'left'; // Reset
 
       // Bottom Left: Theme
-      ctx.font = 'bold 40px "Arial", sans-serif';
+      ctx.font = 'bold 32px "Arial", sans-serif';
       ctx.fillStyle = '#00B4D8';
+      ctx.shadowColor = 'black';
+      ctx.shadowBlur = 8;
+      ctx.lineWidth = 2;
       ctx.strokeText(card.theme.toUpperCase(), 40, height - 50);
       ctx.fillText(card.theme.toUpperCase(), 40, height - 50);
 
@@ -98,23 +100,18 @@ const TradingCard: React.FC<TradingCardProps> = ({ card, user, onDelete, variant
         const logoImg = new Image();
         logoImg.crossOrigin = "anonymous";
 
-        // Convert SVG string to Blob for Canvas
-        const svgBlob = new Blob([VIBEZ_LOGO_SVG], { type: 'image/svg+xml;charset=utf-8' });
-        const url = URL.createObjectURL(svgBlob);
-
         await new Promise((resolve, reject) => {
           logoImg.onload = () => {
             ctx.drawImage(logoImg, lx, ly, logoSize, logoSize);
-            URL.revokeObjectURL(url);
             resolve(null);
           };
           logoImg.onerror = reject;
-          logoImg.src = url;
+          logoImg.src = '/logos/ss-logo-rich-64x64.png';
         });
 
       } catch (error) {
         console.warn("Logo drawing failed", error);
-        // Fallback: Blue square if SVG fails (shouldn't happen)
+        // Fallback: Blue square if logo fails (shouldn't happen)
         ctx.fillStyle = '#00B4D8';
         ctx.fillRect(lx, ly, logoSize, logoSize);
       }
@@ -173,7 +170,7 @@ const TradingCard: React.FC<TradingCardProps> = ({ card, user, onDelete, variant
             </div>
 
             <div className="w-10 h-10 drop-shadow-lg">
-              <div dangerouslySetInnerHTML={{ __html: VIBEZ_LOGO_SVG }} />
+              <img src="/logos/ss-logo-rich-64x64.png" alt="Super Staffers" className="w-full h-full object-contain" />
             </div>
           </div>
         </div>

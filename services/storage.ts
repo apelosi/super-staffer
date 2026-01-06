@@ -238,6 +238,18 @@ export const storage = {
     await dbRequest(STORE_USERS, 'readwrite', store => store.clear());
     await dbRequest(STORE_CARDS, 'readwrite', store => store.clear());
   },
+
+  /**
+   * Get global statistics (rankings, unique savers, etc.)
+   */
+  getGlobalStats: async (clerkId: string): Promise<{
+    totalAddsRank: number;
+    topCardRank: number;
+    totalUsers: number;
+    uniqueSavers: number;
+  }> => {
+    return await db.getGlobalStats(clerkId);
+  },
 };
 
 // Background sync helpers

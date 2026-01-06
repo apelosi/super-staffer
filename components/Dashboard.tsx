@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { User, CardData } from '../types';
 import TradingCard from './TradingCard';
 import SuperPowersInput from './SuperPowersInput';
 import CameraCapture from './CameraCapture';
-import { Plus, Sparkles, Camera, Loader2, X, Check, Wand2, PlusCircle, UserCircle, BarChart3, TrendingUp, Users, Award } from 'lucide-react';
+import { Plus, Sparkles, Camera, Loader2, X, Check, Wand2, PlusCircle, UserCircle, BarChart3, TrendingUp, Users, Award, Trophy, Star } from 'lucide-react';
 import Layout from './Layout';
+import { storage } from '../services/storage';
 
 interface DashboardProps {
   user: User;
@@ -41,6 +42,26 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [editedStory, setEditedStory] = useState(user.story || '');
   const [showCamera, setShowCamera] = useState(false);
   const [savingField, setSavingField] = useState<string | null>(null);
+
+  // Global stats state
+  const [globalStats, setGlobalStats] = useState<{
+    totalAddsRank: number;
+    topCardRank: number;
+    totalUsers: number;
+    uniqueSavers: number;
+  } | null>(null);
+  const [loadingStats, setLoadingStats] = useState(false);
+
+  // Fetch global stats when Stats tab is active
+  useEffect(() => {
+    if (activeTab === 'stats' && !globalStats && !loadingStats) {
+      setLoadingStats(true);
+      storage.getGlobalStats(user.clerkId)
+        .then(stats => setGlobalStats(stats))
+        .catch(err => console.error('Failed to load global stats:', err))
+        .finally(() => setLoadingStats(false));
+    }
+  }, [activeTab, globalStats, loadingStats, user.clerkId]);
 
   const handleCancelField = (field: 'name' | 'selfie' | 'strengths' | 'story') => {
     if (field === 'name') setEditedName(user.name);
@@ -235,11 +256,59 @@ const Dashboard: React.FC<DashboardProps> = ({
             .filter(c => c.active && c.public)
             .sort((a, b) => (b.saveCount || 0) - (a.saveCount || 0))[0];
 
+          // Theme distribution (bar chart data)
+          const themeCount = activeCards > 0 ? cards
+            .filter(c => c.active)
+            .reduce((acc, card) => {
+              acc[card.theme] = (acc[card.theme] || 0) + 1;
+              return acc;
+            }, {} as Record<string, number>) : {};
+          const maxThemeCount = Math.max(...Object.values(themeCount), 1);
+
+          // Hero vs Villain ratio
+          const heroCount = cards.filter(c => c.active && c.alignment === 'Hero').length;
+          const villainCount = cards.filter(c => c.active && c.alignment === 'Villain').length;
+          const heroPercent = activeCards > 0 ? Math.round((heroCount / activeCards) * 100) : 0;
+          const villainPercent = activeCards > 0 ? Math.round((villainCount / activeCards) * 100) : 0;
+
           return (
             <div className="max-w-4xl mx-auto space-y-6">
               <h2 className="text-2xl md:text-3xl font-action text-center mb-8 bg-clip-text text-transparent bg-gradient-to-r from-vibez-blue to-vibez-purple">
                 YOUR SUPER STAFFER STATS
               </h2>
+
+              {/* Rankings Box */}
+              {globalStats && (
+                <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-2xl p-6 md:p-8 border-2 border-amber-300/40 shadow-lg">
+                  <div className="flex items-center gap-3 mb-6">
+                    <Trophy className="w-6 h-6 text-amber-600" />
+                    <h3 className="font-action text-xl text-gray-900">RANKINGS</h3>
+                  </div>
+
+                  <div className="space-y-4 font-comic text-gray-700">
+                    <div className="flex items-start gap-3">
+                      <Trophy className="w-5 h-5 text-amber-600 mt-1 flex-shrink-0" />
+                      <p>
+                        You rank <span className="font-bold text-amber-600">#{globalStats.totalAddsRank}</span> out of <span className="font-bold text-gray-900">{globalStats.totalUsers}</span> SUPER STAFFERS based on total adds.
+                      </p>
+                    </div>
+
+                    <div className="flex items-start gap-3">
+                      <Trophy className="w-5 h-5 text-amber-600 mt-1 flex-shrink-0" />
+                      <p>
+                        You rank <span className="font-bold text-amber-600">#{globalStats.topCardRank}</span> out of <span className="font-bold text-gray-900">{globalStats.totalUsers}</span> SUPER STAFFERS based on your most popular card.
+                      </p>
+                    </div>
+
+                    <div className="flex items-start gap-3">
+                      <Users className="w-5 h-5 text-amber-600 mt-1 flex-shrink-0" />
+                      <p>
+                        <span className="font-bold text-amber-600">{globalStats.uniqueSavers}</span> unique {globalStats.uniqueSavers === 1 ? 'person has' : 'people have'} added your cards to their collection.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Your Cards Stats */}
               <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-6 md:p-8 border-2 border-vibez-blue/20 shadow-lg">
@@ -290,6 +359,65 @@ const Dashboard: React.FC<DashboardProps> = ({
                   )}
                 </div>
               </div>
+
+              {/* Theme Distribution & Hero/Villain Ratio */}
+              {activeCards > 0 && (
+                <div className="bg-gradient-to-br from-green-50 to-teal-50 rounded-2xl p-6 md:p-8 border-2 border-green-300/30 shadow-lg">
+                  <div className="flex items-center gap-3 mb-6">
+                    <BarChart3 className="w-6 h-6 text-green-600" />
+                    <h3 className="font-action text-xl text-gray-900">CARD BREAKDOWN</h3>
+                  </div>
+
+                  <div className="space-y-6">
+                    {/* Hero vs Villain Ratio */}
+                    <div>
+                      <h4 className="font-action text-sm text-gray-600 mb-3">HERO VS VILLAIN</h4>
+                      <div className="flex items-center gap-4 mb-2">
+                        <div className="flex-1 h-8 bg-gray-200 rounded-full overflow-hidden flex">
+                          <div
+                            className="bg-gradient-to-r from-blue-500 to-cyan-400 flex items-center justify-center text-white font-bold text-xs"
+                            style={{ width: `${heroPercent}%` }}
+                          >
+                            {heroPercent > 0 && <span>{heroPercent}%</span>}
+                          </div>
+                          <div
+                            className="bg-gradient-to-r from-red-600 to-purple-600 flex items-center justify-center text-white font-bold text-xs"
+                            style={{ width: `${villainPercent}%` }}
+                          >
+                            {villainPercent > 0 && <span>{villainPercent}%</span>}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex justify-between text-sm font-comic text-gray-600">
+                        <span><span className="font-bold text-blue-600">{heroCount}</span> Hero{heroCount !== 1 ? 'es' : ''}</span>
+                        <span><span className="font-bold text-red-600">{villainCount}</span> Villain{villainCount !== 1 ? 's' : ''}</span>
+                      </div>
+                    </div>
+
+                    {/* Theme Bar Chart */}
+                    <div>
+                      <h4 className="font-action text-sm text-gray-600 mb-3">THEME DISTRIBUTION</h4>
+                      <div className="space-y-2">
+                        {Object.entries(themeCount)
+                          .sort((a, b) => b[1] - a[1])
+                          .map(([theme, count]) => (
+                            <div key={theme} className="flex items-center gap-3">
+                              <span className="font-comic text-xs text-gray-600 w-32 truncate">{theme}</span>
+                              <div className="flex-1 h-6 bg-gray-200 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-gradient-to-r from-vibez-blue to-vibez-purple flex items-center px-2"
+                                  style={{ width: `${(count / maxThemeCount) * 100}%` }}
+                                >
+                                  <span className="text-white font-bold text-xs">{count}</span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Collected Cards Stats */}
               <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 md:p-8 border-2 border-vibez-purple/20 shadow-lg">

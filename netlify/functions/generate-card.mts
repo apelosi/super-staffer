@@ -31,44 +31,29 @@ export default async (req: Request) => {
         const model = "gemini-2.5-flash-image"; // Using the flash model as requested
 
         const prompt = `
-      Create a dynamic digital superhero trading card artwork in the classic 1990s comic book style (specifically Marvel Universe Series III 1992).
+      Describe the physical appearance of the person in this photo briefly but precisely (gender, hair color/style, skin tone, facial features, glasses/beard if any). Do not describe the background or clothing.
 
-      SUBJECT: The person in the input image depicted as a powerful ${alignment} with a "${theme}" theme. The face must remain true to the input photo.
+      [Style: Masterpiece Comic Book Art, ${theme} Aesthetic, Classic 1990s Trading Card Style (Marvel Universe Series III 1992)]
+      [Subject: ${alignment === 'Hero' ? 'Superhero' : 'Supervillain'}]
+      [Action: Dynamic superhero action pose with dramatic energy effects]
+      [Character Reference: Match the face of the uploaded image]
 
-      CRITICAL - ARTISTIC STYLE (MUST BE CONSISTENT):
-      - This MUST be illustrated comic book art, NOT a photograph or photorealistic rendering
-      - Use bold, clean ink outlines on all elements (character, costume, background)
-      - Apply traditional comic book cell-shading with distinct color zones (no photo-realistic gradients or soft blending)
-      - Vibrant, saturated comic book colors throughout (bright, punchy palette)
-      - The entire image should look hand-drawn/illustrated, like a 1990s comic book panel
-      - Face should be comic-illustrated (not a photo composite or photorealistic face)
-      - Think Alex Ross meets Jim Lee - illustrated superhero art, not photography
-
-      CRITICAL - FACIAL LIKENESS REQUIREMENTS (HIGHEST PRIORITY):
-      - The character's face MUST be immediately recognizable as the person in the input photo
-      - Preserve the EXACT face shape, bone structure, and facial geometry from the input image
-      - Maintain ACCURATE eye shape, eye color, nose shape, lip shape, and facial proportions
-      - Keep all distinctive facial features, beauty marks, or characteristics visible in the input
-      - Preserve the natural skin tone and complexion accurately
-      - Hair color and hairstyle should closely match the input photo (can be enhanced with superhero elements but must remain recognizable)
-      - The person's warm smile and expression characteristics should be preserved
-      - Even with costume and powers, someone who knows this person should INSTANTLY recognize their face
-      - Render the face in comic book illustration style (with clean lines and cell-shading), NOT photorealistic
-      - IMPORTANT: Facial accuracy is MORE IMPORTANT than perfect theme adherence
-      - If there is any conflict between likeness and theme, prioritize likeness
+      Create a ${theme}-themed ${alignment} character with the EXACT facial features, hair, and characteristics of the person described above, rendered in comic book illustration style
 
       COMPOSITION:
       1. The character should be in a dramatic action pose. Ensure the face is clearly visible and facing forward or at a 3/4 angle for maximum recognizability.
       2. BACKGROUND: A deep cosmic space/nebula texture with stars, typical of 90s cosmic trading cards. IMPORTANT: The background must be illustrated/stylized, NOT a photograph of space.
-      3. IMPORTANT: Behind the character's torso/body, there must be a distinct, rectangular "window" or portal frame. Inside this window, depict the Marina Bay Sands hotel in Singapore (three towers with the skypark boat on top) as a scenic backdrop. The Marina Bay Sands should be illustrated/stylized to match the comic book art style, NOT a photograph. The character should appear to be in front of this window.
+      3. CRITICAL - MARINA BAY SANDS PLACEMENT: Behind the character's torso/body (in the BACKGROUND, not foreground), there must be a distinct, rectangular "window" or portal frame. Inside this window ONLY, depict the Marina Bay Sands hotel in Singapore (three towers with the skypark boat on top) as a scenic backdrop. The Marina Bay Sands should be illustrated/stylized to match the comic book art style, NOT a photograph. The character should appear to be in FRONT of this window. Marina Bay Sands must NEVER appear in the foreground or anywhere except inside that background window.
 
       STYLE DETAILS:
       - Vibrant, saturated colors for costume, powers, and background
       - Bold comic book ink outlines on ALL elements (character outline, costume details, background objects)
       - Traditional comic book cell-shading and color blocking (avoid photorealistic lighting/gradients)
       - The costume, powers, and setting should match the ${theme} theme
-      - Do NOT include text on the image
-      - CRITICAL: The Marina Bay Sands building must be stylized/illustrated, not a real photograph
+      - CRITICAL: Do NOT include ANY text, logos, symbols, emblems, or branding ANYWHERE on the image
+      - CRITICAL: Do NOT add any logos, icons, or symbols in the corners or any part of the card
+      - CRITICAL: The image should contain ONLY the character, background, and the Marina Bay Sands window - NO logos
+      - CRITICAL: The Marina Bay Sands building must be stylized/illustrated, not a real photograph, and ONLY in the background window
 
       CRITICAL - NO BORDERS OR FRAMES:
       - DO NOT add any white border, frame, or edge around the entire image.
@@ -79,9 +64,11 @@ export default async (req: Request) => {
       - The only frame should be the rectangular window behind the character showing Marina Bay Sands - NOT around the entire image.
 
       FINAL REMINDER:
-      1. The entire image must be illustrated comic book art (1990s superhero trading card style) - NO photorealistic elements.
-      2. The face must be immediately recognizable as the exact person in the input photo, rendered in comic book illustration style.
-      3. Marina Bay Sands must be stylized/illustrated, not a photograph.
+      1. COMIC BOOK DRAWING FIDELITY is the top priority - this must look like a 1990s illustrated trading card.
+      2. Within that comic book style, make the facial features recognizable as the person in the input photo.
+      3. Marina Bay Sands must be stylized/illustrated, NOT a photograph, and ONLY in the background window BEHIND the character.
+      4. DO NOT add ANY logos, symbols, or branding ANYWHERE on the image - the image must be clean with no logos.
+      5. The result should be: "This is a comic book character that looks like [person's name]" - NOT "This is a photo of [person's name]".
     `;
 
         const response = await ai.models.generateContent({
